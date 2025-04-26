@@ -33,6 +33,19 @@ function AnatomyModel(props: Omit<ThreeElements['primitive'], 'object'>) {
   // Load the custom GLTF model
   const { scene } = useGLTF('/models/scene.gltf')
   
+  // Log the entire model structure
+  useEffect(() => {
+    console.log('Model loaded:', scene);
+    scene.traverse((child) => {
+      console.log('Object:', {
+        name: child.name,
+        type: child.type,
+        position: child.position,
+        worldPosition: child.getWorldPosition(new THREE.Vector3())
+      });
+    });
+  }, [scene]);
+
   return (
     <primitive 
       object={scene}
@@ -61,41 +74,26 @@ function CameraTracker({ onUpdate }: { onUpdate: (info: { position: [number, num
 export function VisualizationPanel() {
   const { theme, setTheme } = useTheme()
   const [cameraInfo, setCameraInfo] = useState({ position: [0, 0, 0], zoom: 1 })
-  const [selectedSystem, setSelectedSystem] = useState<string | null>(null)
+  const [health, setHealth] = useState(75)
 
-  const systems = [
-    { id: 'heart', icon: Heart, label: 'Cardiovascular' },
-    { id: 'brain', icon: Brain, label: 'Nervous' },
-    { id: 'lungs', icon: Wind, label: 'Respiratory' },
-    { id: 'liver', icon: Package, label: 'Digestive' },
-    { id: 'stomach', icon: Cookie, label: 'Digestive' },
-    { id: 'eye', icon: Eye, label: 'Sensory' },
-    { id: 'bone', icon: Bone, label: 'Skeletal' },
-    { id: 'muscle', icon: Dumbbell, label: 'Muscular' },
-  ]
+  const getHealthColor = (value: number) => {
+    if (value >= 75) return 'bg-green-500'
+    if (value >= 50) return 'bg-yellow-500'
+    return 'bg-red-500'
+  }
 
   return (
     <div className="fixed inset-0">
-      {/* Left Dashboard */}
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <div className="flex flex-col gap-2">
-            {systems.map((system) => {
-              const Icon = system.icon
-              return (
-                <Button
-                  key={system.id}
-                  variant={selectedSystem === system.id ? "default" : "ghost"}
-                  size="icon"
-                  className="w-8 h-8"
-                  onClick={() => setSelectedSystem(system.id)}
-                  title={system.label}
-                >
-                  <Icon size={16} />
-                </Button>
-              )
-            })}
-          </div>
+      {/* Health Bar */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-48">
+        <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
+          <div 
+            className={`h-full transition-all duration-300 ${getHealthColor(health)}`}
+            style={{ width: `${health}%` }}
+          />
+        </div>
+        <div className="text-center mt-1 text-sm font-medium">
+          Health: {health}%
         </div>
       </div>
 
@@ -122,17 +120,6 @@ export function VisualizationPanel() {
           enablePan={true}
           minDistance={0}
           maxDistance={30}
-          onChange={(e) => {
-            if (e?.target) {
-              const camera = e.target.object;
-              // Clamp X position between -13 and 13
-              camera.position.x = Math.max(-13, Math.min(13, camera.position.x));
-              // Clamp Y position between 0 and 0.07
-              camera.position.y = Math.max(0, Math.min(0.07, camera.position.y));
-              // Clamp Z position between -13 and 13
-              camera.position.z = Math.max(-13, Math.min(13, camera.position.z));
-            }
-          }}
         />
         <Environment preset="studio" />
         <AnatomyModel />
