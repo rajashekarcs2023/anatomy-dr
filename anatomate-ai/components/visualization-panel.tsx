@@ -114,14 +114,25 @@ export function VisualizationPanel() {
         <div>Position: [{cameraInfo.position.map(n => n.toFixed(2)).join(', ')}]</div>
         <div>Zoom: {cameraInfo.zoom.toFixed(2)}</div>
       </div>
-      <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+      <Canvas camera={{ position: [-0.00, 0.02, 0.12], fov: 75 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={0.6} />
         <OrbitControls 
-          enableZoom={true} 
+          enableZoom={false} 
           enablePan={true}
-          minDistance={-30}
+          minDistance={0}
           maxDistance={30}
+          onChange={(e) => {
+            if (e?.target) {
+              const camera = e.target.object;
+              // Clamp X position between -13 and 13
+              camera.position.x = Math.max(-13, Math.min(13, camera.position.x));
+              // Clamp Y position between 0 and 0.07
+              camera.position.y = Math.max(0, Math.min(0.07, camera.position.y));
+              // Clamp Z position between -13 and 13
+              camera.position.z = Math.max(-13, Math.min(13, camera.position.z));
+            }
+          }}
         />
         <Environment preset="studio" />
         <AnatomyModel />
