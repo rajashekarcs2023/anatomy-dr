@@ -45,16 +45,16 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
   
   // Log the entire model structure
   useEffect(() => {
-    console.log('Model loaded:', anatomyScene);
+    console.log('Model loaded:', anatomyScene)
     anatomyScene.traverse((child) => {
       console.log('Object:', {
         name: child.name,
         type: child.type,
         position: child.position,
         worldPosition: child.getWorldPosition(new THREE.Vector3())
-      });
-    });
-  }, [anatomyScene]);
+      })
+    })
+  }, [anatomyScene])
 
   // Live Highlighting and Pulsing (Every Frame)
   useFrame(({ clock }) => {
@@ -117,7 +117,7 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
             object={brainScene}
             position={[0.035, 0.03, 0]}
             scale={0.02}
-            rotation={[0,30.05, 0]}
+            rotation={[0,Math.PI / 2, 0]}
             />
         )}
     </group>
@@ -199,6 +199,33 @@ export function VisualizationPanel() {
             Submit
         </button>
       </div>
+
+      {/* Diagnosis Sidebar */}
+      <div className="absolute top-20 right-4 z-10 w-80 bg-white/90 backdrop-blur-sm p-4 rounded shadow-md overflow-y-auto h-[500px]">
+        <h2 className="text-lg font-bold mb-4">Preliminary Report</h2>
+        <div className="mb-4">
+            <h3 className="font-semibold">Selected Symptoms:</h3>
+            <ul className="list-disc ml-5">
+                {submittedSymptoms.length > 0 ? (
+                    submittedSymptoms.map(symptom => <li key={symptom}>{symptom}</li>)
+                ) : (
+                    <p className="text-sm text-gray-500">No symptoms selected.</p>
+                )}
+            </ul>
+        </div>
+
+      {/* Preliminary Diagnosis */}
+      <div className="mt-4">
+        <h3 className="font-semibold">Preliminary Diagnosis:</h3>
+        <div className="text-sm text-gray-700 mt-2">
+        {submittedSymptoms.length > 0 ? (
+            <p>Based on your symptoms, you may want to seek further evaluation for potential issues related to the listed organs.</p>
+        ) : (
+            <p>No diagnosis available.</p>
+        )}
+        </div>
+      </div>
+    </div>
       
       {/* Health Bar */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-48">
