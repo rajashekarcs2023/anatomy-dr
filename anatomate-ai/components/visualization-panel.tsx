@@ -29,9 +29,16 @@ import { useTheme } from "next-themes"
 import * as THREE from 'three'
 
 // Create a new component for the custom GLTF model
-function AnatomyModel(props: Omit<ThreeElements['primitive'], 'object'>) {
+function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
   // Load the custom GLTF model
   const { scene } = useGLTF('/models/scene.gltf')
+  
+  // Creating map based on model
+  const objectNameMap: Record<string, string> = {
+    "Object_9": "Lungs",
+    "Object_7": "Full Body",
+    "Object_11": "Hand/Foot",
+    }
   
   // Log the entire model structure
   useEffect(() => {
@@ -46,13 +53,40 @@ function AnatomyModel(props: Omit<ThreeElements['primitive'], 'object'>) {
     });
   }, [scene]);
 
+  // Live Highlighting and Pulsing (Every Frame)
+  useFrame(({ clock }) => {
+    if (!highlightedOrgans) {
+        console.log('No highlightedOrgans yet')
+        return
+    }
+
+    const elapsed = clock.getElapsedTime()
+    const pulse = (Math.sin(elapsed * 4) + 1) / 2
+
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        const organName = objectNameMap[child.name]
+        const material = child.material as THREE.MeshStandardMaterial
+
+        if (organName && highlightedOrgans.includes(organName)) {
+          material.color.set("red")
+          material.emissive.set("#ff0000")
+          material.emissiveIntensity = 0.5 + pulse * 1.5
+        } else {
+          material.color.set("white")
+          material.emissive.set("#000000")
+          material.emissiveIntensity = 0
+        }
+      }
+    })
+  })
+
   return (
     <primitive 
       object={scene}
       scale={4.5} // Increased scale for better visibility
       position={[0, 0, 0]} // Centered position
       rotation={[0, 0, 0]} // No rotation
-      {...props}
     />
   )
 }
@@ -75,6 +109,21 @@ export function VisualizationPanel() {
   const { theme, setTheme } = useTheme()
   const [cameraInfo, setCameraInfo] = useState({ position: [0, 0, 0], zoom: 1 })
   const [health, setHealth] = useState(75)
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([])
+  const [submittedSymptoms, setSubmittedSymptoms] = useState<string[]>([])
+
+  // Symptom to organ mapping
+  const symptomToOrgans: Record<string, string[]> = {
+    "cough": ["Lungs"],
+    "chest pain": ["Full Body"],
+    "body ache": ["Full Body", "Lungs", "Hand/Foot"],
+    "headache": ["Full Body"],
+    "hand pain": ["Hand/Foot"],
+    "foot pain": ["Hand/Foot"],
+  }
+  const highlightedOrgans = submittedSymptoms
+    .flatMap(symptom => symptomToOrgans[symptom] || [])
+    .filter((v, i, a) => a.indexOf(v) === i)
 
   const getHealthColor = (value: number) => {
     if (value >= 75) return 'bg-green-500'
@@ -84,6 +133,40 @@ export function VisualizationPanel() {
 
   return (
     <div className="fixed inset-0">
+      {/* Symptom Selector UI */}
+      <div className="absolute top-20 left-4 z-10 bg-white/80 backdrop-blur-sm p-4 rounded shadow-md">
+        <h2 className="text-sm font-bold mb-2">Select Symptoms:</h2>
+        <div className="space-y-2">
+          {Object.keys(symptomToOrgans).map(symptom => (
+            <label key={symptom} className="flex items-center space-x-2 hover:bg-gray-100 p-1 rounded cursor-pointer">
+              <input 
+                type="checkbox" 
+                value={symptom}
+                checked={selectedSymptoms.includes(symptom)}
+                onChange={(e) => {
+                  const { value, checked } = e.target
+                  setSelectedSymptoms(prev =>
+                    checked ? [...prev, value] : prev.filter(sym => sym !== value)
+                  )
+                }}
+              />
+              <span>{symptom}</span>
+            </label>
+          ))}
+        </div>
+
+        {/* Submit Button */}
+        <button 
+            onClick={() => {
+                setSubmittedSymptoms(selectedSymptoms)
+                console.log('Submitted symptoms:', selectedSymptoms)
+            }}
+            className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition-colors"
+        >
+            Submit
+        </button>
+      </div>
+      
       {/* Health Bar */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-48">
         <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
@@ -122,7 +205,7 @@ export function VisualizationPanel() {
           maxDistance={30}
         />
         <Environment preset="studio" />
-        <AnatomyModel />
+        <AnatomyModel highlightedOrgans={highlightedOrgans} />
         <CameraTracker onUpdate={setCameraInfo} />
       </Canvas>
       <div className="absolute bottom-4 left-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded text-sm text-center">
