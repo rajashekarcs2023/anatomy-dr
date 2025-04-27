@@ -4,10 +4,14 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+from app.database import MongoDB
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -49,9 +53,11 @@ try:
         for name, step in model.named_steps.items():
             logger.info(f"Step: {name}, Type: {type(step)}")
             if hasattr(step, "feature_names_in_"):
-                logger.info(f"Expected features: {step.feature_names_in_}")
+                # logger.info(f"Expected features: {step.feature_names_in_}")
+                pass
             if hasattr(step, "get_feature_names_out"):
-                logger.info(f"Output features: {step.get_feature_names_out()}")
+                # logger.info(f"Output features: {step.get_feature_names_out()}")
+                pass
 
 except Exception as e:
     logger.error(f"Error loading model: {str(e)}")
@@ -204,6 +210,8 @@ async def global_exception_handler(request, exc):
 
 
 if __name__ == "__main__":
+    MongoDB.connect_to_database()
+
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
