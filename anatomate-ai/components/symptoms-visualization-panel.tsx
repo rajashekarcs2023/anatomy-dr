@@ -38,6 +38,44 @@ import { useVisualizationStore } from "@/lib/visualization-store"
 import { MedicalScanViewer } from "@/components/medical-scan-viewer"
 import { useTheme } from "next-themes"
 import * as THREE from 'three'
+import { GoogleGenerativeAI } from "@google/generative-ai"
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
+
+// Function to get Gemini diagnosis
+async function getGeminiDiagnosis(symptomData: {
+  selectedSymptoms: string[],
+  customSymptoms: string[],
+  startDate: string,
+  duration: string,
+  severity: number,
+  description: string
+}) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+    
+    const prompt = `Given the following patient symptoms and information, provide a concise bullet-point diagnosis:
+    Symptoms: ${[...symptomData.selectedSymptoms, ...symptomData.customSymptoms].join(", ")}
+    Start Date: ${symptomData.startDate}
+    Duration: ${symptomData.duration}
+    Severity: ${symptomData.severity}/10
+    Additional Details: ${symptomData.description}
+    
+    Please provide:
+    1. A list of possible conditions (1-2 MAX)
+    2. Brief explanation for each
+    3. Recommended next steps
+    Format as bullet points.`
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    return response.text()
+  } catch (error) {
+    console.error("Error getting Gemini diagnosis:", error)
+    return "Unable to generate diagnosis at this time."
+  }
+}
 
 // Create a new component for the custom GLTF model
 function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
@@ -157,37 +195,37 @@ const symptomToOrgans: Record<string, string[]> = {
   "foot pain": ["Hand/Foot"],
 }
 
-// Preliminary conditions mapping
-const preliminaryConditions: Record<string, { condition: string, description: string }[]> = {
-  "cough": [
-    { condition: "Pneumonia", description: "Infection causing inflammation of air sacs in one or both lungs." },
-    { condition: "Bronchitis", description: "Inflammation of bronchial tubes, often causing mucus." },
-    { condition: "Common Cold", description: "Viral respiratory infection causing coughing and congestion." }
-  ],
-  "chest pain": [
-    { condition: "Angina", description: "Reduced blood flow to the heart muscles causing chest pain." },
-    { condition: "Heart Attack", description: "Blockage of blood flow to the heart muscle." },
-    { condition: "Pleurisy", description: "Inflammation of the lining around the lungs causing sharp pain." }
-  ],
-  "body ache": [
-    { condition: "Influenza (Flu)", description: "Viral infection causing fever, body aches, and fatigue." },
-    { condition: "COVID-19", description: "Respiratory illness caused by coronavirus." },
-    { condition: "Fibromyalgia", description: "Chronic disorder causing widespread muscle pain." }
-  ],
-  "headache": [
-    { condition: "Migraine", description: "Severe headaches often with nausea and sensitivity to light." },
-    { condition: "Tension Headache", description: "Mild to moderate pain like a tight band around the head." },
-    { condition: "Dehydration", description: "Lack of sufficient fluids causing headache and weakness." }
-  ],
-  "hand pain": [
-    { condition: "Carpal Tunnel Syndrome", description: "Nerve compression causing hand pain and numbness." },
-    { condition: "Arthritis", description: "Joint inflammation causing pain and stiffness." }
-  ],
-  "foot pain": [
-    { condition: "Plantar Fasciitis", description: "Inflammation of tissue causing heel pain." },
-    { condition: "Gout", description: "Form of arthritis characterized by severe foot pain." }
-  ]
-}
+// // Preliminary conditions mapping
+// const preliminaryConditions: Record<string, { condition: string, description: string }[]> = {
+//   "cough": [
+//     { condition: "Pneumonia", description: "Infection causing inflammation of air sacs in one or both lungs." },
+//     { condition: "Bronchitis", description: "Inflammation of bronchial tubes, often causing mucus." },
+//     { condition: "Common Cold", description: "Viral respiratory infection causing coughing and congestion." }
+//   ],
+//   "chest pain": [
+//     { condition: "Angina", description: "Reduced blood flow to the heart muscles causing chest pain." },
+//     { condition: "Heart Attack", description: "Blockage of blood flow to the heart muscle." },
+//     { condition: "Pleurisy", description: "Inflammation of the lining around the lungs causing sharp pain." }
+//   ],
+//   "body ache": [
+//     { condition: "Influenza (Flu)", description: "Viral infection causing fever, body aches, and fatigue." },
+//     { condition: "COVID-19", description: "Respiratory illness caused by coronavirus." },
+//     { condition: "Fibromyalgia", description: "Chronic disorder causing widespread muscle pain." }
+//   ],
+//   "headache": [
+//     { condition: "Migraine", description: "Severe headaches often with nausea and sensitivity to light." },
+//     { condition: "Tension Headache", description: "Mild to moderate pain like a tight band around the head." },
+//     { condition: "Dehydration", description: "Lack of sufficient fluids causing headache and weakness." }
+//   ],
+//   "hand pain": [
+//     { condition: "Carpal Tunnel Syndrome", description: "Nerve compression causing hand pain and numbness." },
+//     { condition: "Arthritis", description: "Joint inflammation causing pain and stiffness." }
+//   ],
+//   "foot pain": [
+//     { condition: "Plantar Fasciitis", description: "Inflammation of tissue causing heel pain." },
+//     { condition: "Gout", description: "Form of arthritis characterized by severe foot pain." }
+//   ]
+// }
 
 export function SymptomsVisualizationPanel() {
   const { theme, setTheme } = useTheme()
@@ -220,10 +258,10 @@ export function SymptomsVisualizationPanel() {
   }
 
   // Auto-generate preliminary diagnosis list
-  const possibleDiagnoses = submittedSymptoms
-    .flatMap(symptom => preliminaryConditions[symptom] || [])
-    .filter((v, i, a) => a.findIndex(t => t.condition === v.condition) === i) // unique conditions
-    .slice(0, 4) // limit to top 4
+  // const possibleDiagnoses = submittedSymptoms
+  //   // .flatMap(symptom => preliminaryConditions[symptom] || [])
+  //   .filter((v, i, a) => a.findIndex(t => t.condition === v.condition) === i) // unique conditions
+  //   .slice(0, 4) // limit to top 4
 
   const highlightedOrgans = submittedSymptoms
     .flatMap(symptom => symptomToOrgans[symptom] || [])
@@ -256,18 +294,18 @@ export function SymptomsVisualizationPanel() {
     // Simulate API call delay
     setTimeout(() => {
       // Generate mock diagnoses based on the symptom
-      const possibleConditions = preliminaryConditions[symptom.toLowerCase()] || []
+      // const possibleConditions = preliminaryConditions[symptom.toLowerCase()] || []
       
       // Generate random confidence levels (in a real app, this would be from an AI model)
-      const results = possibleConditions.map(condition => ({
-        ...condition,
-        confidence: Math.floor(Math.random() * 30) + 55 // 55-85% confidence range
-      }))
+      // const results = possibleConditions.map(condition => ({
+      //   ...condition,
+      //   confidence: Math.floor(Math.random() * 30) + 55 // 55-85% confidence range
+      // }))
       
-      // Sort by confidence
-      results.sort((a, b) => b.confidence - a.confidence)
+      // // Sort by confidence
+      // results.sort((a, b) => b.confidence - a.confidence)
       
-      setDiagnosisResults(results)
+      // setDiagnosisResults(results)
       
       // Save report
       const newReport = {
@@ -344,6 +382,47 @@ export function SymptomsVisualizationPanel() {
               </Button>
             </div>
           </div>
+
+          {/* Custom Symptoms List */}
+          {selectedSymptoms.filter(symptom => !Object.keys(symptomToOrgans).includes(symptom)).length > 0 && (
+            <div className="mb-4">
+              <Label className="text-sm font-medium mb-2 block">Custom Symptoms:</Label>
+              <div className="space-y-2">
+                {selectedSymptoms
+                  .filter(symptom => !Object.keys(symptomToOrgans).includes(symptom))
+                  .map((symptom, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white/80 p-2 rounded-lg border border-gray-100">
+                      <span className="text-sm text-gray-700">{symptom}</span>
+                      <Button
+                        onClick={() => {
+                          const newSymptoms = selectedSymptoms.filter(s => s !== symptom)
+                          setSelectedSymptoms(newSymptoms)
+                          setSubmittedSymptoms(newSymptoms)
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
           
           {/* Symptom Details */}
           <div className="space-y-4 mt-6 border-t border-gray-100 pt-4">
@@ -408,7 +487,7 @@ export function SymptomsVisualizationPanel() {
 
           {/* Submit Button */}
           <Button 
-            onClick={() => {
+            onClick={async () => {
               if (selectedSymptoms.length === 0) {
                 alert("Please select at least one symptom")
                 return
@@ -417,22 +496,19 @@ export function SymptomsVisualizationPanel() {
               setIsLoading(true)
               setShowDiagnosisPanel(true)
               
-              // Simulate API call delay
-              setTimeout(() => {
-                // Generate mock diagnoses based on the symptoms
-                const generatedDiagnoses = selectedSymptoms
-                  .flatMap(symptom => preliminaryConditions[symptom.toLowerCase()] || [])
-                  .filter((v, i, a) => a.findIndex(t => t.condition === v.condition) === i)
-                  .slice(0, 4)
-                  .map(diagnosis => ({
-                    ...diagnosis,
-                    confidence: Math.floor(Math.random() * 30) + 55 // 55-85% confidence range
-                  }))
-                
-                // Sort by confidence
-                generatedDiagnoses.sort((a, b) => b.confidence - a.confidence)
-                
-                setDiagnosisResults(generatedDiagnoses)
+              try {
+                // Prepare data for Gemini
+                const symptomData = {
+                  selectedSymptoms,
+                  customSymptoms: customSymptom ? [customSymptom] : [],
+                  startDate: date ? format(date, 'MMM dd, yyyy') : 'Not specified',
+                  duration,
+                  severity: severity[0],
+                  description
+                }
+
+                // Get Gemini diagnosis
+                const geminiDiagnosis = await getGeminiDiagnosis(symptomData)
                 
                 // Save report
                 const newReport = {
@@ -440,12 +516,26 @@ export function SymptomsVisualizationPanel() {
                   severity: severity[0],
                   date: date ? format(date, 'MMM dd, yyyy') : 'Today',
                   description,
-                  duration
+                  duration,
+                  geminiDiagnosis
                 }
                 
                 setSavedReports(prev => [newReport, ...prev])
+                setDiagnosisResults([{
+                  condition: "AI Analysis",
+                  description: geminiDiagnosis,
+                  confidence: 85
+                }])
+              } catch (error) {
+                console.error("Error:", error)
+                setDiagnosisResults([{
+                  condition: "Error",
+                  description: "Unable to generate diagnosis at this time.",
+                  confidence: 0
+                }])
+              } finally {
                 setIsLoading(false)
-              }, 1500)
+              }
             }}
             className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-xl transition-colors"
             disabled={isLoading}
@@ -497,89 +587,122 @@ export function SymptomsVisualizationPanel() {
 
       {/* Diagnosis Sidebar - only shown when there are results */}
       {showDiagnosisPanel && diagnosisResults.length > 0 && (
-        <div className="absolute top-20 right-4 z-10 w-80 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-md overflow-y-auto max-h-[500px]">
-          <h2 className="text-lg font-bold mb-4">Preliminary Report</h2>
-        <div className="mb-4">
-          <h3 className="font-semibold">Selected Symptoms:</h3>
-          <ul className="list-disc pl-5 text-sm">
-            {submittedSymptoms.length > 0 ? (
-              submittedSymptoms.map((sym, i) => (
-                <li key={i} className="text-gray-700">{sym}</li>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No symptoms selected.</p>
-            )}
-          </ul>
-        </div>
-
-        {submittedDescription && (
+        <div className="absolute top-20 right-4 z-10 w-96 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-md overflow-y-auto max-h-[80vh]">
+          <h2 className="text-lg font-bold mb-4">AI Analysis Report</h2>
+          
           <div className="mb-4">
-            <h3 className="font-semibold">Description:</h3>
-            <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
-              {submittedDescription}
-            </div>
+            <h3 className="font-semibold">Selected Symptoms:</h3>
+            <ul className="list-disc pl-5 text-sm">
+              {submittedSymptoms.length > 0 ? (
+                submittedSymptoms.map((sym, i) => (
+                  <li key={i} className="text-gray-700">{sym}</li>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">No symptoms selected.</p>
+              )}
+            </ul>
           </div>
-        )}
 
-        {/* Preliminary Diagnosis */}
-        <div className="mt-4">
-          <h3 className="font-semibold">Preliminary Diagnosis:</h3>
-
-          {isLoading ? (
-            <div className="text-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-500 text-sm">Analyzing symptoms...</p>
+          {submittedDescription && (
+            <div className="mb-4">
+              <h3 className="font-semibold">Description:</h3>
+              <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
+                {submittedDescription}
+              </div>
             </div>
-          ) : diagnosisResults.length > 0 ? (
-            <div className="space-y-4 mt-2">
-              {sortedDiagnoses.map((diagnosis, index) => (
-                <div key={index} className="bg-gray-100 p-2 rounded">
-                  <div className={`font-semibold`} style={{ color: getConfidenceColor(diagnosis.confidence) }}>
-                    {diagnosis.condition}
-                  </div>
-                  <div className="text-xs text-gray-600 mb-1">{diagnosis.description}</div>
-
-                  {/* Confidence bar */}
-                  <div className="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="h-2 rounded-full"
-                      style={{
-                        width: `${diagnosis.confidence}%`,
-                        backgroundColor: getConfidenceColor(diagnosis.confidence)
-                      }}
-                    />
-                  </div>
-
-                  <div className="text-right text-xs text-gray-500">{diagnosis.confidence}% confidence</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500 mt-2">No preliminary diagnosis available.</p>
           )}
-        </div>
 
-        {/* Save Report Button */}
-        {!isLoading && diagnosisResults.length > 0 && (
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => {
-                const report = {
-                  symptoms: submittedSymptoms,
-                  diagnoses: diagnosisResults,
-                  description: submittedDescription,
-                  timestamp: new Date().toISOString()
-                }
-                setSavedReports(prev => [...prev, report])
-                console.log("Saved report:", report)
-              }}
-              className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded transition-colors"
-            >
-              Save Report
-            </button>
+          {/* Gemini Diagnosis */}
+          <div className="mt-4">
+            <h3 className="font-semibold">AI Analysis:</h3>
+
+            {isLoading ? (
+              <div className="text-center py-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-500 text-sm">Analyzing symptoms...</p>
+              </div>
+            ) : diagnosisResults.length > 0 ? (
+              <div className="space-y-4 mt-2">
+                {diagnosisResults.map((diagnosis, index) => (
+                  <div key={index} className="space-y-4">
+                    {/* Possible Conditions Card */}
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                      <h4 className="font-semibold text-blue-800 mb-2">Possible Conditions</h4>
+                      <div className="space-y-2">
+                        {diagnosis.description.split("*   **Possible Conditions:**")[1]?.split("*   **Explanation:**")[0]?.split("*   **")?.map((condition, i) => (
+                          condition.trim() && (
+                            <div key={i} className="bg-white/80 p-3 rounded-lg border border-blue-50">
+                              <div className="font-medium text-blue-900">
+                                {condition.split(":**")[0]}
+                              </div>
+                              <div className="text-sm text-gray-700 mt-1">
+                                {condition.split(":**")[1]}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Explanation Card */}
+                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                      <h4 className="font-semibold text-green-800 mb-2">Explanation</h4>
+                      <div className="space-y-2">
+                        {diagnosis.description.split("*   **Explanation:**")[1]?.split("*   **Recommended Next Steps:**")[0]?.split("*   **")?.map((explanation, i) => (
+                          explanation.trim() && (
+                            <div key={i} className="bg-white/80 p-3 rounded-lg border border-green-50">
+                              <div className="font-medium text-green-900">
+                                {explanation.split(":**")[0]}
+                              </div>
+                              <div className="text-sm text-gray-700 mt-1">
+                                {explanation.split(":**")[1]}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Recommended Next Steps Card */}
+                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                      <h4 className="font-semibold text-purple-800 mb-2">Recommended Next Steps</h4>
+                      <div className="space-y-2">
+                        {diagnosis.description.split("*   **Recommended Next Steps:**")[1]?.split("*   **")?.map((step, i) => (
+                          step.trim() && (
+                            <div key={i} className="bg-white/80 p-3 rounded-lg border border-purple-50">
+                              <div className="font-medium text-purple-900">
+                                {step.split(":**")[0]}
+                              </div>
+                              <div className="text-sm text-gray-700 mt-1">
+                                {step.split(":**")[1]}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 mt-2">No analysis available.</p>
+            )}
           </div>
-        )}
-      </div>
+
+          {/* Disclaimer */}
+          <div className="mt-6 bg-amber-50/80 p-4 rounded-xl border border-amber-100 shadow-sm">
+            <div className="flex items-start">
+              <AlertTriangle size={18} className="text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+              <div>
+                <h3 className="font-medium text-amber-800 mb-1">Important Disclaimer</h3>
+                <p className="text-xs text-amber-700">
+                  This analysis is provided by an AI model and is not a medical diagnosis.
+                  Always consult with a healthcare professional for proper evaluation and advice.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       
       {/* Health Bar */}
