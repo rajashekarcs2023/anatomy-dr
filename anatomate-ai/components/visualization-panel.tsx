@@ -144,16 +144,67 @@ export function VisualizationPanel() {
   const [health, setHealth] = useState(75)
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([])
   const [submittedSymptoms, setSubmittedSymptoms] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [diagnosisResults, setDiagnosisResults] = useState<{ condition: string, description: string, confidence: number }[]>([])
+  const [customSymptom, setCustomSymptom] = useState("")
+  const [longerDescription, setLongerDescription] = useState("")
+  const [submittedDescription, setSubmittedDescription] = useState("")
+  const [savedReports, setSavedReports] = useState<any[]>([])
+  
+  const report = {
+    symptoms: submittedSymptoms,
+    description: longerDescription,
+    diagnoses: diagnosisResults,
+    timestamp: new Date().toISOString()
+  }
 
   // Symptom to organ mapping
   const symptomToOrgans: Record<string, string[]> = {
     "cough": ["Lungs"],
-    "chest pain": ["Full Body", "Heart"],
+    "chest pain": ["Lungs", "Heart"],
     "body ache": ["Full Body", "Hand/Foot"],
     "headache": ["Head"],
     "hand pain": ["Hand/Foot"],
     "foot pain": ["Hand/Foot"],
   }
+
+  const preliminaryConditions: Record<string, { condition: string, description: string }[]> = {
+    "cough": [
+      { condition: "Pneumonia", description: "Infection causing inflammation of air sacs in one or both lungs." },
+      { condition: "Bronchitis", description: "Inflammation of bronchial tubes, often causing mucus." },
+      { condition: "Common Cold", description: "Viral respiratory infection causing coughing and congestion." }
+    ],
+    "chest pain": [
+      { condition: "Angina", description: "Reduced blood flow to the heart muscles causing chest pain." },
+      { condition: "Heart Attack", description: "Blockage of blood flow to the heart muscle." },
+      { condition: "Pleurisy", description: "Inflammation of the lining around the lungs causing sharp pain." }
+    ],
+    "body ache": [
+      { condition: "Influenza (Flu)", description: "Viral infection causing fever, body aches, and fatigue." },
+      { condition: "COVID-19", description: "Respiratory illness caused by coronavirus." },
+      { condition: "Fibromyalgia", description: "Chronic disorder causing widespread muscle pain." }
+    ],
+    "headache": [
+      { condition: "Migraine", description: "Severe headaches often with nausea and sensitivity to light." },
+      { condition: "Tension Headache", description: "Mild to moderate pain like a tight band around the head." },
+      { condition: "Dehydration", description: "Lack of sufficient fluids causing headache and weakness." }
+    ],
+    "hand pain": [
+      { condition: "Carpal Tunnel Syndrome", description: "Nerve compression causing hand pain and numbness." },
+      { condition: "Arthritis", description: "Joint inflammation causing pain and stiffness." }
+    ],
+    "foot pain": [
+      { condition: "Plantar Fasciitis", description: "Inflammation of tissue causing heel pain." },
+      { condition: "Gout", description: "Form of arthritis characterized by severe foot pain." }
+    ]
+  }
+  
+  // Auto-generate preliminary diagnosis list
+  const possibleDiagnoses = submittedSymptoms
+    .flatMap(symptom => preliminaryConditions[symptom] || [])
+    .filter((v, i, a) => a.findIndex(t => t.condition === v.condition) === i) // unique conditions
+    .slice(0, 4) // limit to top 4
+
   const highlightedOrgans = submittedSymptoms
     .flatMap(symptom => symptomToOrgans[symptom] || [])
     .filter((v, i, a) => a.indexOf(v) === i)
@@ -163,6 +214,18 @@ export function VisualizationPanel() {
     if (value >= 50) return 'bg-yellow-500'
     return 'bg-red-500'
   }
+
+  // Helper: sort diagnosis results by highest confidence
+    const sortedDiagnoses = diagnosisResults
+        .slice()
+        .sort((a, b) => b.confidence - a.confidence)
+
+    // Helper: get text color based on confidence
+    const getConfidenceColor = (confidence: number) => {
+        if (confidence >= 80) return "#16a34a"; // Strong green
+        if (confidence >= 60) return "#4ade80"; // Light green
+        return "#9ca3af"; // Gray if lower
+    }
 
   return (
     <div className="fixed inset-0">
@@ -188,13 +251,61 @@ export function VisualizationPanel() {
           ))}
         </div>
 
-        {/* Submit Button */}
+        {/* Custom Symptom Input */}
+        <div className="mt-4 space-y-2">
+        <input 
+            type="text" 
+            placeholder="Enter custom symptom..."
+            value={customSymptom}
+            onChange={(e) => setCustomSymptom(e.target.value)}
+            className="w-full border rounded px-2 py-1 text-sm"
+        />
         <button 
             onClick={() => {
-                setSubmittedSymptoms(selectedSymptoms)
-                console.log('Submitted symptoms:', selectedSymptoms)
+            if (customSymptom.trim()) {
+                setSelectedSymptoms(prev => [...prev, customSymptom.trim()])
+                setCustomSymptom("")
+            }
             }}
-            className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition-colors"
+            className="bg-blue-400 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded"
+        >
+            Add Symptom
+        </button>
+        </div>
+
+        {/* Longer Description Textarea */}
+        <div className="mt-4">
+        <textarea
+            placeholder="Describe your symptoms in more detail..."
+            value={longerDescription}
+            onChange={(e) => setLongerDescription(e.target.value)}
+            className="w-full border rounded px-2 py-2 text-sm resize-none"
+            rows={4}
+        />
+        </div>
+
+        {/* Submit Button */}
+        <button 
+        onClick={() => {
+            setIsLoading(true)
+            setSubmittedSymptoms(selectedSymptoms)
+            setSubmittedDescription(longerDescription)
+
+            setTimeout(() => {
+            const generatedDiagnoses = selectedSymptoms
+                .flatMap(symptom => preliminaryConditions[symptom] || [])
+                .filter((v, i, a) => a.findIndex(t => t.condition === v.condition) === i)
+                .slice(0, 4)
+                .map(diagnosis => ({
+                ...diagnosis,
+                confidence: Math.floor(Math.random() * 41) + 50 // 50%-90%
+                }))
+
+            setDiagnosisResults(generatedDiagnoses)
+            setIsLoading(false)
+            }, 2000) // fake 2 seconds loading
+        }}
+        className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition-colors"
         >
             Submit
         </button>
@@ -214,17 +325,73 @@ export function VisualizationPanel() {
             </ul>
         </div>
 
-      {/* Preliminary Diagnosis */}
-      <div className="mt-4">
+        {submittedDescription && (
+          <div className="mb-4">
+            <h3 className="font-semibold">Description:</h3>
+            <div className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
+                {submittedDescription}
+            </div>
+          </div>
+        )}
+
+        {/* Preliminary Diagnosis */}
+        <div className="mt-4">
         <h3 className="font-semibold">Preliminary Diagnosis:</h3>
-        <div className="text-sm text-gray-700 mt-2">
-        {submittedSymptoms.length > 0 ? (
-            <p>Based on your symptoms, you may want to seek further evaluation for potential issues related to the listed organs.</p>
+
+        {isLoading ? (
+            <div className="text-center py-10">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-500 text-sm">Analyzing symptoms...</p>
+            </div>
+        ) : diagnosisResults.length > 0 ? (
+            <div className="space-y-4 mt-2">
+            {sortedDiagnoses.map((diagnosis, index) => (
+                <div key={index} className="bg-gray-100 p-2 rounded">
+                    <div className={`font-semibold`} style={{ color: getConfidenceColor(diagnosis.confidence) }}>
+                    {diagnosis.condition}
+                </div>
+                    <div className="text-xs text-gray-600 mb-1">{diagnosis.description}</div>
+
+                    {/* Confidence bar */}
+                    <div className="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
+                    <div 
+                        className="h-2 rounded-full"
+                        style={{
+                        width: `${diagnosis.confidence}%`,
+                        backgroundColor: getConfidenceColor(diagnosis.confidence)
+                        }}
+                    />
+                    </div>
+
+                    <div className="text-right text-xs text-gray-500">{diagnosis.confidence}% confidence</div>
+                    </div>
+                ))}
+            </div>
         ) : (
-            <p>No diagnosis available.</p>
+            <p className="text-sm text-gray-500 mt-2">No preliminary diagnosis available.</p>
         )}
         </div>
-      </div>
+
+        {/* Save Report Button */}
+        {!isLoading && diagnosisResults.length > 0 && (
+        <div className="mt-4 text-center">
+            <button
+            onClick={() => {
+                const report = {
+                    symptoms: submittedSymptoms,
+                    diagnoses: diagnosisResults,
+                    description: submittedDescription,
+                    timestamp: new Date().toISOString()
+                }
+                setSavedReports(prev => [...prev, report])
+                console.log("Saved report:", report)
+            }}
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded transition-colors"
+            >
+            Save Report
+            </button>
+        </div>
+        )}
     </div>
       
       {/* Health Bar */}
