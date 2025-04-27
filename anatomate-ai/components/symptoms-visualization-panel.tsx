@@ -286,8 +286,8 @@ export function SymptomsVisualizationPanel() {
   return (
     <div className="fixed inset-0">
       {/* Symptom Input Panel */}
-      <div className="absolute top-20 left-4 z-10 bg-white/80 backdrop-blur-sm rounded-xl shadow-md max-w-md overflow-hidden">
-        <div className="p-4">
+      <div className="absolute top-20 left-4 z-10 bg-white/80 backdrop-blur-sm rounded-xl shadow-md max-w-md h-[90vh] flex flex-col">
+        <div className="p-4 overflow-y-auto flex-1">
           <h2 className="text-base font-bold mb-4">Add Symptoms</h2>
           
           {/* Symptom Checkboxes */}
