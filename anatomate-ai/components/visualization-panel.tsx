@@ -119,7 +119,7 @@ export function VisualizationPanel() {
         
         {/* Restored original controls with proper rotation speed */}
         <OrbitControls 
-          enableZoom={true} // Re-enable zoom functionality
+          enableZoom={false} // Re-enable zoom functionality
           enablePan={false} // Keep panning disabled for simplicity
           autoRotate={true} // Keep auto-rotation
           autoRotateSpeed={0.2} // Return to original slower rotation
