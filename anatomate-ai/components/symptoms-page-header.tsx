@@ -15,11 +15,11 @@ export function SymptomsPageHeader({ title }: SymptomsPageHeaderProps) {
   }
   
   return (
-    <header className="bg-[#3498DB] py-4 px-4 text-white shadow-md fixed top-0 left-0 right-0 z-[100]">
+    <header className="bg-gradient-to-r from-teal-500 to-blue-500 py-4 px-4 text-white shadow-md fixed top-0 left-0 right-0 z-[100]">
       <div className="flex items-center">
         <button 
           onClick={handleBackClick}
-          className="mr-3 p-2 hover:bg-[#2E86C1] rounded-full transition-colors"
+          className="mr-3 p-2 hover:bg-white/10 rounded-full transition-colors"
           aria-label="Go back to home"
           style={{ pointerEvents: 'auto' }}
         >

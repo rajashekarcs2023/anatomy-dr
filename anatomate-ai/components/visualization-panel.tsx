@@ -1,16 +1,66 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Environment, useGLTF } from "@react-three/drei"
 import { Button } from "@/components/ui/button"
 import { User, Sun, Moon } from 'lucide-react'
 import { useTheme } from "next-themes"
+import { Color, Mesh, MeshStandardMaterial, Object3D } from "three"
 
 // Create a new component for the custom GLTF model
 function AnatomyModel() {
   // Load the custom GLTF model
   const { scene: anatomyScene } = useGLTF('/models/anatomy/scene.gltf')
+  
+  // Make the model darker and more reddish
+  useEffect(() => {
+    anatomyScene.traverse((node: Object3D) => {
+      // Check if the node is a mesh with material
+      if ((node as Mesh).isMesh) {
+        const mesh = node as Mesh;
+        
+        // Handle different material types
+        if (mesh.material) {
+          // Clone the material to avoid affecting other instances
+          if (Array.isArray(mesh.material)) {
+            // Handle multi-material meshes
+            mesh.material = mesh.material.map(mat => mat.clone());
+          } else {
+            mesh.material = mesh.material.clone();
+          }
+          
+          // Process each material (could be an array or single material)
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          
+          materials.forEach(mat => {
+            // Safely cast to MeshStandardMaterial or similar with color property
+            const material = mat as MeshStandardMaterial;
+            
+            if (material.color) {
+              // Store original color
+              const originalColor = material.color.clone();
+              
+              // Mix with red (increase red, decrease blue slightly)
+              const newColor = new Color(originalColor);
+              newColor.r = Math.min(newColor.r * 1.2, 1.0);  // Increase red more
+              newColor.g = Math.max(newColor.g * 0.9, 0.0);  // Decrease green more
+              newColor.b = Math.max(newColor.b * 0.85, 0.0); // Decrease blue even more
+              
+              // Apply the new color
+              material.color = newColor;
+              
+              // Make it darker overall
+              material.color.multiplyScalar(0.85);
+            }
+            
+            // Update the material
+            material.needsUpdate = true;
+          });
+        }
+      }
+    });
+  }, [anatomyScene]);
   
   // For the landing page, we just need a simple auto-rotation effect
   useFrame(({ clock }) => {
@@ -60,12 +110,12 @@ export function VisualizationPanel() {
 
       {/* 3D Model Canvas with natural lighting */}
       <Canvas camera={{ position: [-0.00, 0.02, 0.15], fov: 75 }} className="z-10 relative">
-        {/* Natural lighting with very subtle pink tint - slightly reduced intensity */}
-        <ambientLight intensity={0.65} color="#fff5f5" />
-        <directionalLight position={[10, 10, 5]} intensity={0.75} color="#fff0f0" />
-        <directionalLight position={[-5, -5, 5]} intensity={0.28} color="#ffffff" />
-        <spotLight position={[0, 5, 5]} intensity={0.38} color="#ffeeee" angle={0.6} penumbra={1} />
-        <spotLight position={[0, -5, 0]} intensity={0.18} color="#ffffff" angle={0.7} penumbra={1} />
+        {/* Lighting with reddish tint to make model darker and more red */}
+        <ambientLight intensity={0.62} color="#fff0f0" />
+        <directionalLight position={[10, 10, 5]} intensity={0.7} color="#ffe0e0" />
+        <directionalLight position={[-5, -5, 5]} intensity={0.25} color="#ffecec" />
+        <spotLight position={[0, 5, 5]} intensity={0.35} color="#ffe5e5" angle={0.6} penumbra={1} />
+        <spotLight position={[0, -5, 0]} intensity={0.15} color="#ffeeee" angle={0.7} penumbra={1} />
         
         {/* Restored original controls with proper rotation speed */}
         <OrbitControls 
