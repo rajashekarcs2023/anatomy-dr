@@ -15,7 +15,26 @@ import {
   Shield,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
+
+// Mock patient data - in a real app, this would come from your backend
+const mockPatientData = {
+  recentSymptoms: [
+    { id: 1, name: "Headache", severity: "Mild", date: "2024-04-27" },
+    { id: 2, name: "Fatigue", severity: "Moderate", date: "2024-04-26" },
+  ],
+  vitalSigns: {
+    bloodPressure: "120/80",
+    heartRate: "72",
+    temperature: "98.6",
+    lastChecked: "2024-04-27",
+  },
+  medications: [
+    { name: "Ibuprofen", dosage: "200mg", frequency: "As needed" },
+    { name: "Vitamin D", dosage: "1000IU", frequency: "Daily" },
+  ],
+};
 
 export function ProfileContent() {
   const searchParams = useSearchParams();
@@ -23,10 +42,27 @@ export function ProfileContent() {
 
   const [qrGenerated, setQrGenerated] = useState(showShare);
   const [remainingTime, setRemainingTime] = useState(60); // 60 minutes
+  const [qrData, setQrData] = useState("");
 
-  // Add a countdown effect for the QR code timer
+  const { user, isLoading } = useUser();
+
   useEffect(() => {
     if (!qrGenerated) return;
+
+    // Generate QR data as a URL
+    const data = {
+      patientId: user?.sub,
+      timestamp: new Date().toISOString(),
+      expiresIn: remainingTime * 60, // Convert to seconds
+      data: mockPatientData,
+    };
+
+    // Create a URL-safe base64 encoded string
+    const encodedData = btoa(JSON.stringify(data));
+    const shareUrl = new URL("/doctor-dashboard", window.location.origin);
+    shareUrl.searchParams.set("data", encodedData);
+
+    setQrData(shareUrl.toString());
 
     const timer = setInterval(() => {
       setRemainingTime((prev) => {
@@ -39,9 +75,7 @@ export function ProfileContent() {
     }, 60000); // Update every minute
 
     return () => clearInterval(timer);
-  }, [qrGenerated]);
-
-  const { user, isLoading } = useUser();
+  }, [qrGenerated, user?.sub, remainingTime]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -84,7 +118,12 @@ export function ProfileContent() {
 
               {/* QR Code */}
               <div className="bg-white p-3 rounded-xl shadow-sm">
-                <QrCode size={180} className="text-blue-800" />
+                <QRCodeSVG
+                  value={qrData}
+                  size={180}
+                  level="H"
+                  includeMargin={true}
+                />
               </div>
             </div>
 

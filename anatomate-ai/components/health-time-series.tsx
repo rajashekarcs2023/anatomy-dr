@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
-import * as d3 from "d3"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import * as d3 from "d3";
+import { useEffect, useRef } from "react";
 
 interface HealthData {
   heartRate: number;
@@ -27,7 +27,10 @@ interface HealthTimeSeriesProps {
   selectedMetric: keyof HealthData;
 }
 
-export function HealthTimeSeries({ data, selectedMetric }: HealthTimeSeriesProps) {
+export function HealthTimeSeries({
+  data,
+  selectedMetric,
+}: HealthTimeSeriesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -51,26 +54,26 @@ export function HealthTimeSeries({ data, selectedMetric }: HealthTimeSeriesProps
 
     // Convert data to array format for D3
     const timeSeriesData = Object.entries(data).map(([year, metrics]) => ({
-      year: parseInt(year.split('_')[1]),
-      value: metrics[selectedMetric]
+      year: parseInt(year.split("_")[1]),
+      value: metrics[selectedMetric],
     }));
 
     // Create scales
-    const x = d3.scaleLinear()
-      .domain([1, 10])
-      .range([0, chartWidth]);
+    const x = d3.scaleLinear().domain([1, 10]).range([0, chartWidth]);
 
-    const y = d3.scaleLinear()
+    const y = d3
+      .scaleLinear()
       .domain([
-        d3.min(timeSeriesData, d => d.value) * 0.9,
-        d3.max(timeSeriesData, d => d.value) * 1.1
+        (d3.min(timeSeriesData, (d) => d.value) || 0) * 0.9,
+        (d3.max(timeSeriesData, (d) => d.value) || 0) * 1.1,
       ])
       .range([chartHeight, 0]);
 
     // Create line generator
-    const line = d3.line<{ year: number; value: number }>()
-      .x(d => x(d.year))
-      .y(d => y(d.value))
+    const line = d3
+      .line<{ year: number; value: number }>()
+      .x((d) => x(d.year))
+      .y((d) => y(d.value))
       .curve(d3.curveMonotoneX);
 
     // Add normal range area if applicable
@@ -83,12 +86,13 @@ export function HealthTimeSeries({ data, selectedMetric }: HealthTimeSeriesProps
       diastolicBP: [60, 75],
       bmi: [20, 23],
       pulsePressure: [40, 40],
-      map: [70, 90]
+      map: [70, 90],
     };
 
     if (normalRanges[selectedMetric]) {
       const [min, max] = normalRanges[selectedMetric];
-      chart.append("rect")
+      chart
+        .append("rect")
         .attr("x", 0)
         .attr("y", y(max))
         .attr("width", chartWidth)
@@ -99,7 +103,8 @@ export function HealthTimeSeries({ data, selectedMetric }: HealthTimeSeriesProps
     }
 
     // Add the line
-    chart.append("path")
+    chart
+      .append("path")
       .datum(timeSeriesData)
       .attr("fill", "none")
       .attr("stroke", "#2563eb")
@@ -107,39 +112,45 @@ export function HealthTimeSeries({ data, selectedMetric }: HealthTimeSeriesProps
       .attr("d", line);
 
     // Add dots
-    chart.selectAll(".dot")
+    chart
+      .selectAll(".dot")
       .data(timeSeriesData)
       .enter()
       .append("circle")
       .attr("class", "dot")
-      .attr("cx", d => x(d.year))
-      .attr("cy", d => y(d.value))
+      .attr("cx", (d) => x(d.year))
+      .attr("cy", (d) => y(d.value))
       .attr("r", 4)
       .attr("fill", "#2563eb");
 
     // Add axes
-    chart.append("g")
+    chart
+      .append("g")
       .attr("transform", `translate(0,${chartHeight})`)
-      .call(d3.axisBottom(x).ticks(10).tickFormat(d => `Year ${d}`));
+      .call(
+        d3
+          .axisBottom(x)
+          .ticks(10)
+          .tickFormat((d) => `Year ${d}`)
+      );
 
-    chart.append("g")
-      .call(d3.axisLeft(y));
+    chart.append("g").call(d3.axisLeft(y));
 
     // Add title with capitalized words
     const title = selectedMetric
-      .replace(/([A-Z])/g, ' $1')
+      .replace(/([A-Z])/g, " $1")
       .trim()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
-    chart.append("text")
+    chart
+      .append("text")
       .attr("x", chartWidth / 2)
       .attr("y", -margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
       .text(`${title} Over Time`);
-
   }, [data, selectedMetric]);
 
   return (
@@ -154,4 +165,4 @@ export function HealthTimeSeries({ data, selectedMetric }: HealthTimeSeriesProps
       </CardContent>
     </Card>
   );
-} 
+}
