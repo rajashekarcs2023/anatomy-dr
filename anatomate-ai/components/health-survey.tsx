@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 
 interface HealthSurveyData {
-  diabetes_binary: number;
   highBP: number;
   highChol: number;
   cholCheck: number;
@@ -27,9 +26,14 @@ interface HealthSurveyData {
   income: number;
 }
 
+interface PredictionResult {
+  prediction: number;
+  probability?: number;
+  message: string;
+}
+
 export function HealthSurvey() {
   const [formData, setFormData] = useState<HealthSurveyData>({
-    diabetes_binary: 0,
     highBP: 0,
     highChol: 0,
     cholCheck: 0,
@@ -55,6 +59,9 @@ export function HealthSurvey() {
 
   const [currentSection, setCurrentSection] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const totalSections = 4;
 
   useEffect(() => {
@@ -62,10 +69,37 @@ export function HealthSurvey() {
     setProgress(newProgress);
   }, [currentSection]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Handle form submission here
+    setIsLoading(true);
+    setError(null);
+    setPrediction(null);
+
+    try {
+      console.log('Sending data:', formData);
+      
+      const response = await fetch('http://localhost:8000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const responseData = await response.json();
+      console.log('Response:', response.status, responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.detail || 'Failed to get prediction');
+      }
+
+      setPrediction(responseData);
+    } catch (err) {
+      console.error('Error details:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -95,16 +129,6 @@ export function HealthSurvey() {
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-6 text-blue-600">Health Conditions</h2>
             <div className="grid grid-cols-1 gap-6">
-              <div className="space-y-2">
-                <label className="block text-lg">
-                  Do you have diabetes?
-                  <select name="diabetes_binary" value={formData.diabetes_binary} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value={0}>No</option>
-                    <option value={1}>Yes</option>
-                  </select>
-                </label>
-              </div>
-
               <div className="space-y-2">
                 <label className="block text-lg">
                   High Blood Pressure
@@ -324,41 +348,71 @@ export function HealthSurvey() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {renderSection()}
-
-            <div className="flex justify-between mt-8">
+          {prediction ? (
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-800">Prediction Results</h2>
+              <div className={`p-4 rounded-lg ${
+                prediction.prediction === 1 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+              }`}>
+                <p className="text-xl font-medium">{prediction.message}</p>
+                {prediction.probability !== undefined && (
+                  <p className="mt-2">Probability: {(prediction.probability * 100).toFixed(1)}%</p>
+                )}
+              </div>
               <button
-                type="button"
-                onClick={prevSection}
-                className={`px-6 py-3 rounded-lg transition-colors ${
-                  currentSection === 0
-                    ? 'bg-gray-300 cursor-not-allowed'
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
-                }`}
-                disabled={currentSection === 0}
+                onClick={() => {
+                  setPrediction(null);
+                  setCurrentSection(0);
+                }}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Previous
+                Start New Survey
               </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {renderSection()}
 
-              {currentSection === totalSections - 1 ? (
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Submit Survey
-                </button>
-              ) : (
+              <div className="flex justify-between mt-8">
                 <button
                   type="button"
-                  onClick={nextSection}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={prevSection}
+                  className={`px-6 py-3 rounded-lg transition-colors ${
+                    currentSection === 0
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                  }`}
+                  disabled={currentSection === 0}
                 >
-                  Next
+                  Previous
                 </button>
-              )}
+
+                {currentSection === totalSections - 1 ? (
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Processing...' : 'Submit Survey'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={nextSection}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+
+          {error && (
+            <div className="mt-4 p-4 bg-red-100 text-red-800 rounded-lg">
+              {error}
             </div>
-          </form>
+          )}
         </div>
       </div>
     </div>
