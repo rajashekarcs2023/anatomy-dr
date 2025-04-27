@@ -312,7 +312,6 @@ export function SymptomsVisualizationPanel() {
                     }}
                   />
                   <span>{symptom.charAt(0).toUpperCase() + symptom.slice(1)}</span>
-                  <span className="text-xs text-gray-500">({organs.join(", ")})</span>
                 </label>
               ))}
             </div>
@@ -320,7 +319,7 @@ export function SymptomsVisualizationPanel() {
 
           {/* Custom Symptom Input */}
           <div className="mb-4">
-            <Label htmlFor="customSymptom" className="text-sm font-medium mb-1 block">Add custom symptom:</Label>
+            <Label htmlFor="customSymptom" className="text-sm font-medium mb-1 block">Add other symptoms:</Label>
             <div className="flex gap-2">
               <Input 
                 id="customSymptom"
