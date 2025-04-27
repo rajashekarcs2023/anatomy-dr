@@ -27,11 +27,19 @@ import { useVisualizationStore } from "@/lib/visualization-store"
 import { MedicalScanViewer } from "@/components/medical-scan-viewer"
 import { useTheme } from "next-themes"
 import * as THREE from 'three'
+import { useSymptomStore } from "@/lib/symptom-store"
 
 // Create a new component for the custom GLTF model
-function AnatomyModel(props: Omit<ThreeElements['primitive'], 'object'>) {
+function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
   // Load the custom GLTF model
   const { scene } = useGLTF('/models/scene.gltf')
+  
+  // Creating map based on model
+  const objectNameMap: Record<string, string> = {
+    "Object_9": "Lungs",
+    "Object_7": "Full Body",
+    "Object_11": "Hand/Foot",
+    }
   
   // Log the entire model structure
   useEffect(() => {
@@ -46,13 +54,40 @@ function AnatomyModel(props: Omit<ThreeElements['primitive'], 'object'>) {
     });
   }, [scene]);
 
+  // Live Highlighting and Pulsing (Every Frame)
+  useFrame(({ clock }) => {
+    if (!highlightedOrgans) {
+        console.log('No highlightedOrgans yet')
+        return
+    }
+
+    const elapsed = clock.getElapsedTime()
+    const pulse = (Math.sin(elapsed * 4) + 1) / 2
+
+    scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const organName = objectNameMap[child.name]
+        const material = child.material as THREE.MeshStandardMaterial
+
+        if (organName && highlightedOrgans.includes(organName)) {
+          material.color.set("red")
+          material.emissive.set("#ff0000")
+          material.emissiveIntensity = 0.5 + pulse * 1.5
+        } else {
+          material.color.set("white")
+          material.emissive.set("#000000")
+          material.emissiveIntensity = 0
+        }
+      }
+    })
+  })
+
   return (
     <primitive 
       object={scene}
       scale={4.5} // Increased scale for better visibility
       position={[0, 0, 0]} // Centered position
       rotation={[0, 0, 0]} // No rotation
-      {...props}
     />
   )
 }
@@ -74,28 +109,14 @@ function CameraTracker({ onUpdate }: { onUpdate: (info: { position: [number, num
 export function VisualizationPanel() {
   const { theme, setTheme } = useTheme()
   const [cameraInfo, setCameraInfo] = useState({ position: [0, 0, 0], zoom: 1 })
-  const [health, setHealth] = useState(75)
-
-  const getHealthColor = (value: number) => {
-    if (value >= 75) return 'bg-green-500'
-    if (value >= 50) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
+  
+  // Use the symptom store instead of local state
+  const { highlightedOrgans } = useSymptomStore()
 
   return (
-    <div className="fixed inset-0">
-      {/* Health Bar */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-48">
-        <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
-          <div 
-            className={`h-full transition-all duration-300 ${getHealthColor(health)}`}
-            style={{ width: `${health}%` }}
-          />
-        </div>
-        <div className="text-center mt-1 text-sm font-medium">
-          Health: {health}%
-        </div>
-      </div>
+    <div className="fixed inset-0 bg-gradient-radial from-white via-[#F8FBFD] to-[#E6F7F2]">
+      {/* Symptom Selector UI */}
+      {/* Symptom selector has been moved to the floating action buttons */}
 
       <div className="absolute top-4 right-4 z-10">
         <Button
@@ -103,14 +124,10 @@ export function VisualizationPanel() {
           size="icon"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           aria-label="Toggle theme"
-          className="bg-white/80 backdrop-blur-sm"
+          className="bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-300 shadow-md rounded-full h-10 w-10"
         >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          {theme === "dark" ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-indigo-500" />}
         </Button>
-      </div>
-      <div className="absolute top-4 left-20 bg-white/80 backdrop-blur-sm p-2 rounded text-sm z-10">
-        <div>Position: [{cameraInfo.position.map(n => n.toFixed(2)).join(', ')}]</div>
-        <div>Zoom: {cameraInfo.zoom.toFixed(2)}</div>
       </div>
       <Canvas camera={{ position: [-0.00, 0.02, 0.12], fov: 75 }}>
         <ambientLight intensity={0.5} />
@@ -122,11 +139,11 @@ export function VisualizationPanel() {
           maxDistance={30}
         />
         <Environment preset="studio" />
-        <AnatomyModel />
+        <AnatomyModel highlightedOrgans={highlightedOrgans} />
         <CameraTracker onUpdate={setCameraInfo} />
       </Canvas>
-      <div className="absolute bottom-4 left-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded text-sm text-center">
-        Tip: Click and drag to rotate the model. Scroll to zoom in/out.
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/70 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-md transition-opacity duration-300 hover:opacity-100 opacity-80 max-w-max">
+        <span className="flex items-center gap-1">💡 Rotate: Click + Drag | Zoom: Scroll</span>
       </div>
     </div>
   )

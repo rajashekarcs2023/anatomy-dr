@@ -3,12 +3,13 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { TopBar } from "@/components/top-bar"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "AnatoMate.ai - Medical Explanation & Visualization",
-  description: "Translate medical language into plain English explanations with 3D anatomical visualizations",
+  title: "AnatoMate.ai - Your Personal Health Assistant",
+  description: "Understand your health with 3D visualizations and plain English explanations",
     generator: 'v0.dev'
 }
 
@@ -21,7 +22,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <TopBar />
+            <main className="flex-1">{children}</main>
+          </div>
         </ThemeProvider>
       </body>
     </html>
