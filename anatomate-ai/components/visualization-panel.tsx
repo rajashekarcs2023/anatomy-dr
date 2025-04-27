@@ -1,90 +1,23 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useModeStore } from "@/lib/store"
-import { Canvas, ThreeElements, useThree, useFrame } from "@react-three/fiber"
-import { OrbitControls, PerspectiveCamera, Environment, useGLTF, Html } from "@react-three/drei"
+import { useState } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { OrbitControls, Environment, useGLTF } from "@react-three/drei"
 import { Button } from "@/components/ui/button"
-import { 
-  Maximize2, 
-  Minimize2, 
-  Sun, 
-  Moon, 
-  Heart, 
-  Brain, 
-  Wind, 
-  Package, 
-  Cookie, 
-  Eye, 
-  Bone, 
-  Dumbbell,
-  Menu,
-  User
-} from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { useVisualizationStore } from "@/lib/visualization-store"
-import { MedicalScanViewer } from "@/components/medical-scan-viewer"
+import { User } from 'lucide-react'
 import { useTheme } from "next-themes"
 import * as THREE from 'three'
-import { useSymptomStore } from "@/lib/symptom-store"
 
 // Create a new component for the custom GLTF model
-function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
+function AnatomyModel() {
   // Load the custom GLTF model
   const { scene: anatomyScene } = useGLTF('/models/anatomy/scene.gltf')
-  const { scene: lungsScene } = useGLTF('/models/lungs/scene.gltf')
-  const { scene: brainScene } = useGLTF('/models/brain/scene.gltf')
-  const { scene: heartScene } = useGLTF('/models/heart/scene.gltf')
   
-  // Creating map based on model
-  const objectNameMap: Record<string, string> = {
-    "Object_9": "Lungs",
-    "Object_7": "Full Body",
-    "Object_11": "Hand/Foot",
-    }
-  
-  // Log the entire model structure
-  useEffect(() => {
-    console.log('Model loaded:', anatomyScene);
-    anatomyScene.traverse((child) => {
-      console.log('Object:', {
-        name: child.name,
-        type: child.type,
-        position: child.position,
-        worldPosition: child.getWorldPosition(new THREE.Vector3())
-      });
-    });
-  }, [anatomyScene]);
-
-  // Live Highlighting and Pulsing (Every Frame)
+  // For the landing page, we just need a simple auto-rotation effect
   useFrame(({ clock }) => {
-    if (!highlightedOrgans) {
-        console.log('No highlightedOrgans yet')
-        return
-    }
-
-    const elapsed = clock.getElapsedTime()
-    const pulse = (Math.sin(elapsed * 4) + 1) / 2
-
-    anatomyScene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const organName = objectNameMap[child.name]
-        const material = child.material as THREE.MeshStandardMaterial
-
-        if (organName && highlightedOrgans.includes(organName)) {
-          material.color.set("red")
-          material.emissive.set("#ff0000")
-          material.emissiveIntensity = 0.5 + pulse * 1.5
-        } else {
-          material.color.set("white")
-          material.emissive.set("#000000")
-          material.emissiveIntensity = 0
-        }
-      }
-    })
+    const time = clock.getElapsedTime()
+    // Apply a gentle rotation to the model
+    anatomyScene.rotation.y = time * 0.1
   })
 
   return (
@@ -94,57 +27,18 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
         object={anatomyScene}
         scale={5} // Increased scale for better visibility
         position={[0, 0, 0]} // Centered position
-        rotation={[0, 0, 0]} // No rotation
       />
-      {/* Extra organ models */}
-      {highlightedOrgans.includes('Lungs') && (
-        <primitive 
-          object={lungsScene}
-          position={[0.042, -0.01, 0]}
-          scale={0.13}
-        />
-      )}
-
-      {highlightedOrgans.includes('Heart') && (
-        <primitive 
-          object={heartScene}
-          position={[0.044, -0.01, 0]}
-          scale={0.02}
-        />
-      )}
-
-      {highlightedOrgans.includes('Head') && (
-        <primitive 
-          object={brainScene}
-          position={[0.035, 0.03, 0]}
-          scale={0.02}
-          rotation={[0, Math.PI / 2, 0]}
-        />
-      )}
     </group>
   )
 }
 
-// Component to track camera info
-function CameraTracker({ onUpdate }: { onUpdate: (info: { position: [number, number, number], zoom: number }) => void }) {
-  const { camera } = useThree()
-  
-  useFrame(() => {
-    onUpdate({
-      position: [camera.position.x, camera.position.y, camera.position.z],
-      zoom: camera.zoom
-    })
-  })
-  
+// Simple component for camera controls - not needed for detailed tracking on landing page
+function CameraControls() {
   return null
 }
 
 export function VisualizationPanel() {
-  const { theme, setTheme } = useTheme()
-  const [cameraInfo, setCameraInfo] = useState({ position: [0, 0, 0], zoom: 1 })
-  
-  // Use the symptom store instead of local state
-  const { highlightedOrgans } = useSymptomStore()
+  const { theme } = useTheme()
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-[#E0F7FA] via-[#E1F5FE] to-[#E8F5E9] dark:from-[#0D47A1]/20 dark:via-[#01579B]/20 dark:to-[#004D40]/20 overflow-hidden">
@@ -170,10 +64,6 @@ export function VisualizationPanel() {
       
       {/* Model halo glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-gradient-radial from-[#34D399]/30 to-transparent blur-xl animate-pulse-slow z-0"></div>
-      {/* Symptom Selector UI */}
-      {/* Symptom selector has been moved to the floating action buttons */}
-
-      {/* Hamburger menu removed as requested */}
       
       {/* Profile button on top right */}
       <div className="absolute top-4 right-4 z-20">
@@ -186,6 +76,8 @@ export function VisualizationPanel() {
           <User size={22} className="text-gray-700" />
         </Button>
       </div>
+
+      {/* 3D Model Canvas */}
       <Canvas camera={{ position: [-0.00, 0.02, 0.15], fov: 75 }} className="z-10 relative">
         {/* Enhanced lighting for better model presentation */}
         <ambientLight intensity={0.7} />
@@ -196,13 +88,10 @@ export function VisualizationPanel() {
         
         {/* Enhanced controls with slow auto-rotation */}
         <OrbitControls 
-          enableZoom={true} 
-          enablePan={true}
-          minDistance={0.12}
-          maxDistance={0.3}
+          enableZoom={false} // Disable zoom for landing page
+          enablePan={false} // Disable panning for landing page
           autoRotate={true} // Always auto-rotate for more life
           autoRotateSpeed={0.2} // Very slow rotation
-          rotateSpeed={0.8}
           enableDamping={true}
           dampingFactor={0.05}
         />
@@ -215,20 +104,21 @@ export function VisualizationPanel() {
           <shadowMaterial opacity={0.2} transparent />
         </mesh>
         
-        <AnatomyModel highlightedOrgans={highlightedOrgans} />
-        <CameraTracker onUpdate={setCameraInfo} />
+        <AnatomyModel />
+        <CameraControls />
       </Canvas>
 
-      
       {/* Decorative corner elements */}
       <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#00C58E]/10 to-transparent z-0 pointer-events-none"></div>
       <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-[#007AFF]/10 to-transparent z-0 pointer-events-none"></div>
+      
+      {/* Mini tip label */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full bg-[#D1FAE5] shadow-lg backdrop-blur-sm border border-[#A7F3D0]/50 z-20 flex items-center space-x-2 transition-all duration-300 hover:shadow-xl hover:bg-[#A7F3D0]">
+        <span className="text-xs sm:text-sm font-medium text-[#065F46]">🌿 Explore AnatoMate.ai - Your Health Companion</span>
+      </div>
     </div>
   )
 }
 
 // Preload the model to improve performance
 useGLTF.preload('/models/anatomy/scene.gltf')
-useGLTF.preload('/models/brain/scene.gltf')
-useGLTF.preload('/models/heart/scene.gltf')
-useGLTF.preload('/models/lungs/scene.gltf')
