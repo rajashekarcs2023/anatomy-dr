@@ -117,45 +117,58 @@ async def predict(data: HealthData):
     
     try:
         # Log incoming data
-        logger.info(f"Received prediction request with data: {data.dict()}")
+        logger.info(f"Received prediction request with data: {data.model_dump()}")
         
-        # Convert input data to numpy array
-        input_features = [
-            data.highBP, data.highChol, data.cholCheck,
-            data.bmi, data.smoker, data.stroke, data.heartDiseaseorAttack,
-            data.physActivity, data.fruits, data.veggies, data.hvyAlcoholConsump,
-            data.anyHealthcare, data.noDocbcCost, data.genHlth, data.mentHlth,
-            data.physHlth, data.diffWalk, data.sex, data.age, data.education,
-            data.income
-        ]
-        logger.info(f"Input features: {input_features}")
-        logger.info(f"Number of features: {len(input_features)}")
+        # Convert input data to numpy array with correct feature names
+        input_features = {
+            'HighBP': data.highBP,
+            'HighChol': data.highChol,
+            'CholCheck': data.cholCheck,
+            'BMI': data.bmi,
+            'Smoker': data.smoker,
+            'Stroke': data.stroke,
+            'HeartDiseaseorAttack': data.heartDiseaseorAttack,
+            'PhysActivity': data.physActivity,
+            'Fruits': data.fruits,
+            'Veggies': data.veggies,
+            'HvyAlcoholConsump': data.hvyAlcoholConsump,
+            'AnyHealthcare': data.anyHealthcare,
+            'NoDocbcCost': data.noDocbcCost,
+            'GenHlth': data.genHlth,
+            'MentHlth': data.mentHlth,
+            'PhysHlth': data.physHlth,
+            'DiffWalk': data.diffWalk,
+            'Sex': data.sex,
+            'Age': data.age,
+            'Education': data.education,
+            'Income': data.income
+        }
         
-        input_data = np.array([input_features])
-        logger.info(f"Input array shape: {input_data.shape}")
+        # Convert to numpy array in the correct order
+        feature_names = model.named_steps['preprocessor'].feature_names_in_
+        input_array = np.array([[input_features[feature] for feature in feature_names]])
         
-        # Make prediction
+        logger.info(f"Input array shape: {input_array.shape}")
+        
+        # Make prediction using the full pipeline
         try:
-            prediction = model.predict(input_data)
+            prediction = model.predict(input_array)
+            probability = model.predict_proba(input_array)[:, 1][0]
+            
             logger.info(f"Prediction result: {prediction}")
+            logger.info(f"Probability: {probability}")
+                
         except Exception as e:
             logger.error(f"Error during prediction: {str(e)}")
             logger.error(f"Traceback: {traceback.format_exc()}")
             raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
         
-        # Get probability with fallback options
-        probability = get_probability(model, input_data)
-        logger.info(f"Probability result: {probability}")
-        
         # Prepare response
         result = {
             "prediction": int(prediction[0]),
-            "message": "High risk of diabetes" if prediction[0] == 1 else "Low risk of diabetes"
+            "message": "High risk of diabetes" if prediction[0] == 1 else "Low risk of diabetes",
+            "probability": float(probability)
         }
-        
-        # Add probability if available
-        if probability is not None:
-            result["probability"] = float(probability)
         
         logger.info(f"Returning result: {result}")
         return result

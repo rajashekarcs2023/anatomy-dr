@@ -36,25 +36,25 @@ export function HealthSurvey() {
   const [formData, setFormData] = useState<HealthSurveyData>({
     highBP: 0,
     highChol: 0,
-    cholCheck: 0,
-    bmi: 0,
+    cholCheck: 1,
+    bmi: 25,
     smoker: 0,
     stroke: 0,
     heartDiseaseorAttack: 0,
-    physActivity: 0,
-    fruits: 0,
-    veggies: 0,
+    physActivity: 1,
+    fruits: 1,
+    veggies: 1,
     hvyAlcoholConsump: 0,
-    anyHealthcare: 0,
+    anyHealthcare: 1,
     noDocbcCost: 0,
-    genHlth: 1,
+    genHlth: 3,
     mentHlth: 0,
     physHlth: 0,
     diffWalk: 0,
     sex: 0,
-    age: 1,
-    education: 1,
-    income: 1,
+    age: 7,
+    education: 4,
+    income: 5,
   });
 
   const [currentSection, setCurrentSection] = useState(0);
@@ -136,6 +136,7 @@ export function HealthSurvey() {
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Have you been told you have high blood pressure?</p>
                 </label>
               </div>
 
@@ -146,16 +147,35 @@ export function HealthSurvey() {
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Have you been told you have high cholesterol?</p>
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg">
-                  Cholesterol Check in Past 5 Years
+                  Cholesterol Check
                   <select name="cholCheck" value={formData.cholCheck} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Had cholesterol check in past 5 years?</p>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  BMI
+                  <input
+                    type="number"
+                    name="bmi"
+                    value={formData.bmi}
+                    onChange={handleChange}
+                    className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    min="10"
+                    max="60"
+                    step="0.1"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Body Mass Index</p>
                 </label>
               </div>
             </div>
@@ -168,46 +188,45 @@ export function HealthSurvey() {
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label className="block text-lg">
-                  BMI
-                  <input
-                    type="number"
-                    name="bmi"
-                    value={formData.bmi}
-                    onChange={handleChange}
-                    className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    min="0"
-                    step="0.1"
-                  />
-                </label>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-lg">
-                  Smoked 100+ Cigarettes
+                  Smoker
                   <select name="smoker" value={formData.smoker} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Smoked at least 100 cigarettes in lifetime?</p>
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg">
-                  Previous Stroke
+                  History of Stroke
                   <select name="stroke" value={formData.stroke} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Have you ever had a stroke?</p>
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg">
-                  Heart Disease or Attack
+                  Heart Disease/Attack
                   <select name="heartDiseaseorAttack" value={formData.heartDiseaseorAttack} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">History of coronary heart disease or heart attack?</p>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  Physical Activity
+                  <select name="physActivity" value={formData.physActivity} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value={0}>No</option>
+                    <option value={1}>Yes</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Exercise in past 30 days (other than regular job)?</p>
                 </label>
               </div>
             </div>
@@ -216,7 +235,69 @@ export function HealthSurvey() {
       case 2:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-6 text-blue-600">Health Status & Diet</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-blue-600">Diet & Healthcare</h2>
+            <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  Fruit Consumption
+                  <select name="fruits" value={formData.fruits} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value={0}>No</option>
+                    <option value={1}>Yes</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Eat fruit at least once per day?</p>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  Vegetable Consumption
+                  <select name="veggies" value={formData.veggies} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value={0}>No</option>
+                    <option value={1}>Yes</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Eat vegetables at least once per day?</p>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  Heavy Alcohol Consumption
+                  <select name="hvyAlcoholConsump" value={formData.hvyAlcoholConsump} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value={0}>No</option>
+                    <option value={1}>Yes</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Men: &gt;14 drinks/week, Women: &gt;7 drinks/week</p>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  Healthcare Coverage
+                  <select name="anyHealthcare" value={formData.anyHealthcare} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value={0}>No</option>
+                    <option value={1}>Yes</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Do you have any kind of health insurance?</p>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-lg">
+                  Doctor Cost Barrier
+                  <select name="noDocbcCost" value={formData.noDocbcCost} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value={0}>No</option>
+                    <option value={1}>Yes</option>
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Couldn't see doctor due to cost in past year?</p>
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-6 text-blue-600">Health Status & Demographics</h2>
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label className="block text-lg">
@@ -228,12 +309,13 @@ export function HealthSurvey() {
                     <option value={4}>Fair</option>
                     <option value={5}>Poor</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Rate your general health</p>
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg">
-                  Mental Health Days (Past 30)
+                  Mental Health Days
                   <input
                     type="number"
                     name="mentHlth"
@@ -243,12 +325,13 @@ export function HealthSurvey() {
                     min="0"
                     max="30"
                   />
+                  <p className="text-sm text-gray-500 mt-1">Days of poor mental health in past month</p>
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg">
-                  Physical Health Days (Past 30)
+                  Physical Health Days
                   <input
                     type="number"
                     name="physHlth"
@@ -258,26 +341,21 @@ export function HealthSurvey() {
                     min="0"
                     max="30"
                   />
+                  <p className="text-sm text-gray-500 mt-1">Days of poor physical health in past month</p>
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg">
-                  Fruits (1+ times/day)
-                  <select name="fruits" value={formData.fruits} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                  Difficulty Walking
+                  <select name="diffWalk" value={formData.diffWalk} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value={0}>No</option>
                     <option value={1}>Yes</option>
                   </select>
+                  <p className="text-sm text-gray-500 mt-1">Serious difficulty walking or climbing stairs?</p>
                 </label>
               </div>
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-6 text-blue-600">Demographics</h2>
-            <div className="grid grid-cols-1 gap-6">
+
               <div className="space-y-2">
                 <label className="block text-lg">
                   Sex
@@ -292,9 +370,19 @@ export function HealthSurvey() {
                 <label className="block text-lg">
                   Age Category
                   <select name="age" value={formData.age} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    {Array.from({length: 14}, (_, i) => (
-                      <option key={i + 1} value={i + 1}>Category {i + 1}</option>
-                    ))}
+                    <option value={1}>18-24</option>
+                    <option value={2}>25-29</option>
+                    <option value={3}>30-34</option>
+                    <option value={4}>35-39</option>
+                    <option value={5}>40-44</option>
+                    <option value={6}>45-49</option>
+                    <option value={7}>50-54</option>
+                    <option value={8}>55-59</option>
+                    <option value={9}>60-64</option>
+                    <option value={10}>65-69</option>
+                    <option value={11}>70-74</option>
+                    <option value={12}>75-79</option>
+                    <option value={13}>80+</option>
                   </select>
                 </label>
               </div>
@@ -303,9 +391,12 @@ export function HealthSurvey() {
                 <label className="block text-lg">
                   Education Level
                   <select name="education" value={formData.education} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    {Array.from({length: 6}, (_, i) => (
-                      <option key={i + 1} value={i + 1}>Level {i + 1}</option>
-                    ))}
+                    <option value={1}>Never attended school</option>
+                    <option value={2}>Elementary</option>
+                    <option value={3}>Some high school</option>
+                    <option value={4}>High school graduate</option>
+                    <option value={5}>Some college</option>
+                    <option value={6}>College graduate</option>
                   </select>
                 </label>
               </div>
@@ -314,9 +405,14 @@ export function HealthSurvey() {
                 <label className="block text-lg">
                   Income Level
                   <select name="income" value={formData.income} onChange={handleChange} className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    {Array.from({length: 8}, (_, i) => (
-                      <option key={i + 1} value={i + 1}>Level {i + 1}</option>
-                    ))}
+                    <option value={1}>Less than $10,000</option>
+                    <option value={2}>$10,000-$15,000</option>
+                    <option value={3}>$15,000-$20,000</option>
+                    <option value={4}>$20,000-$25,000</option>
+                    <option value={5}>$25,000-$35,000</option>
+                    <option value={6}>$35,000-$50,000</option>
+                    <option value={7}>$50,000-$75,000</option>
+                    <option value={8}>More than $75,000</option>
                   </select>
                 </label>
               </div>
