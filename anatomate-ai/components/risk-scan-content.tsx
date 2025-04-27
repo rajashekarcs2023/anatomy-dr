@@ -5,100 +5,92 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Loader2, AlertTriangle, CheckCircle, Heart, Activity, BarChart4 } from "lucide-react"
+import { generateRandomHealthData, analyzeHealthData } from "@/lib/health-data-generator"
+import { HealthTimeSeries } from "@/components/health-time-series"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-type RiskLevel = "low" | "medium" | "high"
+type HealthMetric = 
+  | "heartRate"
+  | "respiratoryRate"
+  | "bodyTemperature"
+  | "oxygenSaturation"
+  | "systolicBP"
+  | "diastolicBP"
+  | "weight"
+  | "hrv"
+  | "pulsePressure"
+  | "bmi"
+  | "map"
 
-interface Risk {
-  id: string
-  name: string
-  level: RiskLevel
-  description: string
-  recommendation: string
+type AnalysisItem = string | string[]
+
+interface Analysis {
+  green: AnalysisItem;
+  yellow: AnalysisItem;
+  red: AnalysisItem;
 }
-
-// Mock risks
-const mockRisks: Risk[] = [
-  {
-    id: "r1",
-    name: "Heart Disease",
-    level: "low",
-    description: "Based on your health history and lifestyle, your risk for heart disease is low.",
-    recommendation: "Continue with regular exercise and a balanced diet low in saturated fats.",
-  },
-  {
-    id: "r2",
-    name: "Type 2 Diabetes",
-    level: "medium",
-    description: "Your family history and recent blood sugar readings suggest a moderate risk for type 2 diabetes.",
-    recommendation: "Consider reducing sugar intake and increasing physical activity. Schedule a blood glucose test.",
-  },
-  {
-    id: "r3",
-    name: "Hypertension",
-    level: "high",
-    description: "Your recent blood pressure readings and family history indicate a higher risk for hypertension.",
-    recommendation: "Schedule a follow-up with your doctor to discuss blood pressure management strategies.",
-  },
-]
 
 export function RiskScanContent() {
   const [scanning, setScanning] = useState(false)
   const [scanComplete, setScanComplete] = useState(false)
-  const [risks, setRisks] = useState<Risk[]>([])
+  const [healthData, setHealthData] = useState<any>(null)
+  const [selectedMetric, setSelectedMetric] = useState<HealthMetric>("heartRate")
+  const [analysis, setAnalysis] = useState<Analysis | null>(null)
 
-  const handleScan = () => {
+  const handleScan = async () => {
     setScanning(true)
 
-    // Simulate scan delay
-    setTimeout(() => {
+    try {
+      // Generate random health data
+      const data = generateRandomHealthData()
+      setHealthData(data)
+
+      // Simulate ML model prediction (0 for low risk, 1 for high risk)
+      const modelPrediction = Math.random() < 0.3 ? 1 : 0
+
+      // Get AI analysis
+      const aiAnalysis = await analyzeHealthData(data, modelPrediction)
+      setAnalysis(aiAnalysis)
+
       setScanning(false)
       setScanComplete(true)
-      setRisks(mockRisks)
-    }, 3000)
+    } catch (error) {
+      console.error("Error during scan:", error)
+      setScanning(false)
+    }
   }
 
   const resetScan = () => {
     setScanComplete(false)
-    setRisks([])
+    setHealthData(null)
+    setAnalysis(null)
   }
 
-  const getRiskColor = (level: RiskLevel) => {
-    switch (level) {
-      case "low":
-        return "bg-green-100 text-green-700"
-      case "medium":
-        return "bg-yellow-100 text-yellow-700"
-      case "high":
-        return "bg-red-100 text-red-700"
-      default:
-        return "bg-gray-100 text-gray-700"
-    }
-  }
+  const metrics: { value: HealthMetric; label: string }[] = [
+    { value: "heartRate", label: "Heart Rate" },
+    { value: "respiratoryRate", label: "Respiratory Rate" },
+    { value: "bodyTemperature", label: "Body Temperature" },
+    { value: "oxygenSaturation", label: "Oxygen Saturation" },
+    { value: "systolicBP", label: "Systolic Blood Pressure" },
+    { value: "diastolicBP", label: "Diastolic Blood Pressure" },
+    { value: "weight", label: "Weight" },
+    { value: "hrv", label: "Heart Rate Variability" },
+    { value: "pulsePressure", label: "Pulse Pressure" },
+    { value: "bmi", label: "BMI" },
+    { value: "map", label: "Mean Arterial Pressure" }
+  ]
 
-  const getRiskProgressColor = (level: RiskLevel) => {
-    switch (level) {
-      case "low":
-        return "bg-green-500"
-      case "medium":
-        return "bg-yellow-500"
-      case "high":
-        return "bg-red-500"
-      default:
-        return "bg-gray-500"
+  const renderAnalysisContent = (content: AnalysisItem) => {
+    if (Array.isArray(content)) {
+      return (
+        <ul className="list-disc pl-4 space-y-2">
+          {content.map((item, index) => (
+            <li key={index} className="text-sm">{item}</li>
+          ))}
+        </ul>
+      )
     }
-  }
-
-  const getRiskProgressValue = (level: RiskLevel) => {
-    switch (level) {
-      case "low":
-        return 25
-      case "medium":
-        return 50
-      case "high":
-        return 85
-      default:
-        return 0
-    }
+    return <p className="text-sm">{content}</p>
   }
 
   return (
@@ -165,48 +157,65 @@ export function RiskScanContent() {
             </Button>
           </div>
 
-          <div className="space-y-5">
-            {risks.map((risk) => (
-              <Card key={risk.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 backdrop-blur-sm">
-                <CardHeader className="py-4 pb-3">
-                  <CardTitle className="text-base flex justify-between items-center">
-                    <span className="flex items-center gap-2">
-                      {risk.level === "high" ? (
-                        <AlertTriangle size={16} className="text-red-500" />
-                      ) : risk.level === "medium" ? (
-                        <Activity size={16} className="text-yellow-500" />
-                      ) : (
-                        <Heart size={16} className="text-green-500" />
-                      )}
-                      {risk.name}
-                    </span>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${getRiskColor(risk.level)}`}>
-                      {risk.level.charAt(0).toUpperCase() + risk.level.slice(1)} Risk
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="py-3">
-                  <div className="mb-4">
-                    <div className="flex justify-between text-xs mb-1 px-1">
-                      <span className="text-green-600 font-medium">Low</span>
-                      <span className="text-red-600 font-medium">High</span>
-                    </div>
-                    <Progress
-                      value={getRiskProgressValue(risk.level)}
-                      className={`h-2.5 rounded-full ${getRiskProgressColor(risk.level)}`}
-                    />
-                  </div>
-                  <p className="text-sm mb-4 text-gray-600">{risk.description}</p>
-                  <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100">
-                    <div className="flex items-start">
-                      <CheckCircle size={18} className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                      <p className="text-sm text-blue-800 leading-relaxed">{risk.recommendation}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {analysis && (
+            <div className="space-y-4">
+              {analysis.green && (
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-base text-green-600">Healthy Indicators</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    {renderAnalysisContent(analysis.green)}
+                  </CardContent>
+                </Card>
+              )}
+
+              {analysis.yellow && (
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-base text-yellow-600">Warning Signs</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    {renderAnalysisContent(analysis.yellow)}
+                  </CardContent>
+                </Card>
+              )}
+
+              {analysis.red && (
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-base text-red-600">Critical Issues</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    {renderAnalysisContent(analysis.red)}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {healthData && (
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Select
+                  value={selectedMetric}
+                  onValueChange={(value) => setSelectedMetric(value as HealthMetric)}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select metric" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {metrics.map((metric) => (
+                      <SelectItem key={metric.value} value={metric.value}>
+                        {metric.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <HealthTimeSeries data={healthData} selectedMetric={selectedMetric} />
+            </div>
+          )}
 
           <div className="mt-8 bg-amber-50/80 p-5 rounded-xl border border-amber-100 shadow-sm">
             <div className="flex items-start">
