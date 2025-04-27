@@ -13,34 +13,65 @@ interface FloatingButtonProps {
 }
 
 function FloatingButton({ icon: Icon, href, position, label, color = "blue" }: FloatingButtonProps & { color?: "blue" | "mint" | "gold" | "purple" | "emerald" | "indigo" }) {
-  // Updated vibrant color palette
+  // Cosmic vibrant color palette
   const colorClasses = {
-    blue: "text-[#60A5FA] group-hover:text-[#3B82F6] group-hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]",
-    mint: "text-[#4ADE80] group-hover:text-[#22C55E] group-hover:drop-shadow-[0_0_12px_rgba(34,197,94,0.6)]",
-    gold: "text-[#FBBF24] group-hover:text-[#F59E0B] group-hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)]",
-    purple: "text-[#A78BFA] group-hover:text-[#8B5CF6] group-hover:drop-shadow-[0_0_12px_rgba(139,92,246,0.6)]",
-    emerald: "text-[#34D399] group-hover:text-[#10B981] group-hover:drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]",
-    indigo: "text-[#818CF8] group-hover:text-[#6366F1] group-hover:drop-shadow-[0_0_12px_rgba(99,102,241,0.6)]"
+    blue: "text-[#00BFFF] group-hover:text-white",
+    mint: "text-[#00FFCC] group-hover:text-white",
+    gold: "text-[#FFC837] group-hover:text-white",
+    purple: "text-[#A78BFA] group-hover:text-white",
+    emerald: "text-[#10FFCB] group-hover:text-white",
+    indigo: "text-[#818CF8] group-hover:text-white"
   }
   
-  // Enhanced background gradients
+  // Cosmic background gradients
   const bgGradients = {
-    blue: "bg-gradient-to-br from-white to-blue-50/90",
-    mint: "bg-gradient-to-br from-white to-green-50/90",
-    gold: "bg-gradient-to-br from-white to-amber-50/90",
-    purple: "bg-gradient-to-br from-white to-purple-50/90",
-    emerald: "bg-gradient-to-br from-white to-emerald-50/90",
-    indigo: "bg-gradient-to-br from-white to-indigo-50/90"
+    blue: "bg-gradient-to-br from-[#0B132B]/80 to-[#1C3D5A]/90",
+    mint: "bg-gradient-to-br from-[#0B132B]/80 to-[#004D40]/90",
+    gold: "bg-gradient-to-br from-[#0B132B]/80 to-[#7D4400]/90",
+    purple: "bg-gradient-to-br from-[#0B132B]/80 to-[#4A148C]/90",
+    emerald: "bg-gradient-to-br from-[#0B132B]/80 to-[#004D40]/90",
+    indigo: "bg-gradient-to-br from-[#0B132B]/80 to-[#283593]/90"
+  }
+  
+  // Glow effects
+  const glowEffects = {
+    blue: "shadow-[0_0_15px_rgba(0,191,255,0.5)]",
+    mint: "shadow-[0_0_15px_rgba(0,255,204,0.5)]",
+    gold: "shadow-[0_0_15px_rgba(255,200,55,0.5)]",
+    purple: "shadow-[0_0_15px_rgba(167,139,250,0.5)]",
+    emerald: "shadow-[0_0_15px_rgba(16,255,203,0.5)]",
+    indigo: "shadow-[0_0_15px_rgba(129,140,248,0.5)]"
+  }
+  
+  // Border colors
+  const borderColors = {
+    blue: "border-[#00BFFF]/30",
+    mint: "border-[#00FFCC]/30",
+    gold: "border-[#FFC837]/30",
+    purple: "border-[#A78BFA]/30",
+    emerald: "border-[#10FFCB]/30",
+    indigo: "border-[#818CF8]/30"
+  }
+  
+  // Hover glow effects
+  const hoverGlowEffects = {
+    blue: "group-hover:shadow-[0_0_20px_rgba(0,191,255,0.7)]",
+    mint: "group-hover:shadow-[0_0_20px_rgba(0,255,204,0.7)]",
+    gold: "group-hover:shadow-[0_0_20px_rgba(255,200,55,0.7)]",
+    purple: "group-hover:shadow-[0_0_20px_rgba(167,139,250,0.7)]",
+    emerald: "group-hover:shadow-[0_0_20px_rgba(16,255,203,0.7)]",
+    indigo: "group-hover:shadow-[0_0_20px_rgba(129,140,248,0.7)]"
   }
   
   return (
     <Link
       href={href}
-      className={`absolute ${position} w-16 h-16 sm:w-[64px] sm:h-[64px] rounded-full ${bgGradients[color]} backdrop-blur-md shadow-lg hover:shadow-xl border border-white/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-white/0 before:hover:bg-white/10 before:transition-all before:duration-300 before:scale-100 hover:before:scale-[1.35] before:opacity-0 hover:before:opacity-100 overflow-visible`}
+      className={`absolute ${position} w-16 h-16 sm:w-[64px] sm:h-[64px] rounded-full ${bgGradients[color]} backdrop-blur-md ${glowEffects[color]} hover:${hoverGlowEffects[color]} border ${borderColors[color]} flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group animate-pulse-slow overflow-visible z-10`}
       aria-label={label}
     >
-      <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${colorClasses[color]} transition-all duration-300`} />
-      <span className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 scale-0 group-hover:scale-100 bg-white/95 backdrop-blur-md text-gray-800 text-xs font-medium rounded-full py-2 px-4 pointer-events-none whitespace-nowrap shadow-md border border-white/60 z-10 bottom-full mb-3 left-1/2 -translate-x-1/2">
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+      <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${colorClasses[color]} transition-all duration-300 ${hoverGlowEffects[color]}`} />
+      <span className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 scale-0 group-hover:scale-100 bg-[#0B132B]/80 backdrop-blur-md text-white text-xs font-medium rounded-full py-2 px-4 pointer-events-none whitespace-nowrap shadow-lg border border-white/10 z-20 bottom-full mb-3 left-1/2 -translate-x-1/2">
         {label}
       </span>
     </Link>
@@ -61,11 +92,12 @@ function SymptomManagementButton() {
   return (
     <Link href="/symptoms">
       <button
-        className="absolute top-[50%] -translate-y-1/2 left-[8%] sm:left-[10%] w-16 h-16 sm:w-[64px] sm:h-[64px] rounded-full bg-gradient-to-br from-white to-emerald-50/90 backdrop-blur-md shadow-lg hover:shadow-xl border border-white/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-white/0 before:hover:bg-white/10 before:transition-all before:duration-300 before:scale-100 hover:before:scale-[1.35] before:opacity-0 hover:before:opacity-100 overflow-visible"
+        className="absolute top-[50%] -translate-y-1/2 left-[8%] sm:left-[10%] w-16 h-16 sm:w-[64px] sm:h-[64px] rounded-full bg-gradient-to-br from-[#0B132B]/80 to-[#004D40]/90 backdrop-blur-md shadow-[0_0_15px_rgba(16,255,203,0.5)] hover:shadow-[0_0_20px_rgba(16,255,203,0.7)] border border-[#10FFCB]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group animate-pulse-slow overflow-visible z-10"
         aria-label="Symptom Management"
       >
-        <Stethoscope className="w-7 h-7 sm:w-8 sm:h-8 text-[#34D399] group-hover:text-[#10B981] group-hover:drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-300" />
-        <span className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 scale-0 group-hover:scale-100 bg-white/95 backdrop-blur-md text-gray-800 text-xs font-medium rounded-full py-2 px-4 pointer-events-none whitespace-nowrap bottom-full mb-3 left-1/2 -translate-x-1/2 shadow-md border border-white/60 z-10">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+        <Stethoscope className="w-7 h-7 sm:w-8 sm:h-8 text-[#10FFCB] group-hover:text-white transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(16,255,203,0.7)]" />
+        <span className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 scale-0 group-hover:scale-100 bg-[#0B132B]/80 backdrop-blur-md text-white text-xs font-medium rounded-full py-2 px-4 pointer-events-none whitespace-nowrap bottom-full mb-3 left-1/2 -translate-x-1/2 shadow-lg border border-white/10 z-20">
           Symptom Management
         </span>
       </button>
@@ -78,12 +110,13 @@ function SymptomManagementButton() {
 function AnalyzeExplainButton() {
   return (
     <button
-      className="absolute top-[30%] -translate-y-1/2 left-[12%] sm:left-[16%] w-16 h-16 sm:w-[64px] sm:h-[64px] rounded-full bg-gradient-to-br from-white to-indigo-50/90 backdrop-blur-md shadow-lg hover:shadow-xl border border-white/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-white/0 before:hover:bg-white/10 before:transition-all before:duration-300 before:scale-100 hover:before:scale-[1.35] before:opacity-0 hover:before:opacity-100 overflow-visible"
+      className="absolute top-[30%] -translate-y-1/2 left-[12%] sm:left-[16%] w-16 h-16 sm:w-[64px] sm:h-[64px] rounded-full bg-gradient-to-br from-[#0B132B]/80 to-[#283593]/90 backdrop-blur-md shadow-[0_0_15px_rgba(129,140,248,0.5)] hover:shadow-[0_0_20px_rgba(129,140,248,0.7)] border border-[#818CF8]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group animate-pulse-slow overflow-visible z-10"
       aria-label="Analyze & Explain"
       onClick={() => window.location.href = '/analyze'}
     >
-      <Search className="w-7 h-7 sm:w-8 sm:h-8 text-[#818CF8] group-hover:text-[#6366F1] group-hover:drop-shadow-[0_0_12px_rgba(99,102,241,0.6)] transition-all duration-300" />
-      <span className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 scale-0 group-hover:scale-100 bg-white/95 backdrop-blur-md text-gray-800 text-xs font-medium rounded-full py-2 px-4 pointer-events-none whitespace-nowrap bottom-full mb-3 left-1/2 -translate-x-1/2 shadow-md border border-white/60 z-10">
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+      <Search className="w-7 h-7 sm:w-8 sm:h-8 text-[#818CF8] group-hover:text-white transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(129,140,248,0.7)]" />
+      <span className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 scale-0 group-hover:scale-100 bg-[#0B132B]/80 backdrop-blur-md text-white text-xs font-medium rounded-full py-2 px-4 pointer-events-none whitespace-nowrap bottom-full mb-3 left-1/2 -translate-x-1/2 shadow-lg border border-white/10 z-20">
         Analyze & Explain
       </span>
     </button>
@@ -94,10 +127,11 @@ function ProfileButton() {
   return (
     <Link
       href="/profile"
-      className="absolute top-4 right-4 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-50/90 backdrop-blur-md shadow-lg hover:shadow-xl border border-white/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-white/0 before:hover:bg-white/10 before:transition-all before:duration-300 before:scale-100 hover:before:scale-[1.35] before:opacity-0 hover:before:opacity-100 overflow-hidden"
+      className="absolute top-4 right-4 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-[#0B132B]/80 to-[#1C3D5A]/90 backdrop-blur-md shadow-[0_0_15px_rgba(0,191,255,0.5)] hover:shadow-[0_0_20px_rgba(0,191,255,0.7)] border border-[#00BFFF]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group animate-pulse-slow overflow-hidden"
       aria-label="Profile"
     >
-      <User className="w-6 h-6 text-[#64748B] group-hover:text-[#475569] group-hover:drop-shadow-[0_0_12px_rgba(71,85,105,0.6)] transition-all duration-300" />
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+      <User className="w-6 h-6 text-[#00BFFF] group-hover:text-white transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,191,255,0.7)]" />
     </Link>
   )
 }

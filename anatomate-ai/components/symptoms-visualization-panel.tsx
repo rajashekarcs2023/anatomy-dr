@@ -284,7 +284,7 @@ export function SymptomsVisualizationPanel() {
   }
 
   return (
-    <div className="fixed inset-0">
+    <div className="fixed inset-0 pt-16">
       {/* Symptom Input Panel */}
       <div className="absolute top-20 left-4 z-10 bg-white/80 backdrop-blur-sm rounded-xl shadow-md max-w-md h-[90vh] flex flex-col">
         <div className="p-4 overflow-y-auto flex-1">
