@@ -18,7 +18,9 @@ import {
   Cookie, 
   Eye, 
   Bone, 
-  Dumbbell 
+  Dumbbell,
+  Menu,
+  User
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
@@ -145,37 +147,82 @@ export function VisualizationPanel() {
   const { highlightedOrgans } = useSymptomStore()
 
   return (
-    <div className="fixed inset-0 bg-gradient-radial from-white via-[#F8FBFD] to-[#E6F7F2]">
+    <div className="fixed inset-0 bg-gradient-to-b from-[#E0F7FA] via-[#E1F5FE] to-[#E8F5E9] dark:from-[#0D47A1]/20 dark:via-[#01579B]/20 dark:to-[#004D40]/20 overflow-hidden">
+      {/* Floating particles background effect */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+        {/* Larger gradient blobs */}
+        <div className="absolute top-[10%] left-[15%] w-[300px] h-[300px] rounded-full bg-gradient-to-br from-[#00C58E]/20 to-[#00C58E]/5 blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-[20%] right-[10%] w-[250px] h-[250px] rounded-full bg-gradient-to-br from-[#007AFF]/20 to-[#007AFF]/5 blur-3xl animate-pulse-slow"></div>
+        <div className="absolute top-[40%] right-[20%] w-[200px] h-[200px] rounded-full bg-gradient-to-br from-[#FFC107]/10 to-[#FFC107]/5 blur-3xl animate-pulse-slow"></div>
+        
+        {/* Tiny floating particles */}
+        <div className="absolute top-[15%] left-[25%] w-2 h-2 rounded-full bg-[#34D399]/30 animate-float"></div>
+        <div className="absolute top-[35%] left-[65%] w-1.5 h-1.5 rounded-full bg-[#60A5FA]/30 animate-float animation-delay-1000"></div>
+        <div className="absolute top-[55%] left-[35%] w-1 h-1 rounded-full bg-[#A78BFA]/30 animate-float animation-delay-2000"></div>
+        <div className="absolute top-[75%] left-[55%] w-2 h-2 rounded-full bg-[#FBBF24]/30 animate-float animation-delay-3000"></div>
+        <div className="absolute top-[25%] left-[75%] w-1.5 h-1.5 rounded-full bg-[#4ADE80]/30 animate-float animation-delay-4000"></div>
+        <div className="absolute top-[65%] left-[15%] w-1 h-1 rounded-full bg-[#818CF8]/30 animate-float animation-delay-5000"></div>
+        
+        {/* DNA helix shapes (very faint) */}
+        <div className="absolute top-[5%] right-[10%] w-[100px] h-[300px] bg-gradient-to-b from-[#60A5FA]/5 to-[#34D399]/5 rounded-full blur-xl transform rotate-45 animate-float animation-delay-2000"></div>
+        <div className="absolute bottom-[15%] left-[10%] w-[80px] h-[250px] bg-gradient-to-b from-[#A78BFA]/5 to-[#FBBF24]/5 rounded-full blur-xl transform -rotate-45 animate-float animation-delay-3000"></div>
+      </div>
+      
+      {/* Model halo glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-gradient-radial from-[#34D399]/30 to-transparent blur-xl animate-pulse-slow z-0"></div>
       {/* Symptom Selector UI */}
       {/* Symptom selector has been moved to the floating action buttons */}
 
-      <div className="absolute top-4 right-4 z-10">
+      {/* Hamburger menu removed as requested */}
+      
+      {/* Profile button on top right */}
+      <div className="absolute top-4 right-4 z-20">
         <Button
           variant="outline"
           size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          aria-label="Toggle theme"
-          className="bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-300 shadow-md rounded-full h-10 w-10"
+          aria-label="Profile"
+          className="bg-white/80 backdrop-blur-md hover:bg-white/95 transition-all duration-300 shadow-lg hover:shadow-xl rounded-full h-12 w-12 border border-white/50 hover:border-white/80 hover:scale-110"
         >
-          {theme === "dark" ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-indigo-500" />}
+          <User size={22} className="text-gray-700" />
         </Button>
       </div>
-      <Canvas camera={{ position: [-0.00, 0.02, 0.12], fov: 75 }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={0.6} />
+      <Canvas camera={{ position: [-0.00, 0.02, 0.12], fov: 75 }} className="z-10 relative">
+        {/* Enhanced lighting for better model presentation */}
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[10, 10, 5]} intensity={0.8} color="#ffffff" />
+        <directionalLight position={[-5, -5, 5]} intensity={0.3} color="#34D399" />
+        <spotLight position={[0, 5, 5]} intensity={0.4} color="#60A5FA" angle={0.6} penumbra={1} />
+        <spotLight position={[0, -5, 0]} intensity={0.2} color="#A78BFA" angle={0.7} penumbra={1} />
+        
+        {/* Enhanced controls with slow auto-rotation */}
         <OrbitControls 
-          enableZoom={false} 
+          enableZoom={true} 
           enablePan={true}
-          minDistance={0}
-          maxDistance={30}
+          minDistance={0.05}
+          maxDistance={0.3}
+          autoRotate={true} // Always auto-rotate for more life
+          autoRotateSpeed={0.2} // Very slow rotation
+          rotateSpeed={0.8}
+          enableDamping={true}
+          dampingFactor={0.05}
         />
+        
         <Environment preset="studio" />
+        
+        {/* Shadow effect under model */}
+        <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[0.5, 0.5]} />
+          <shadowMaterial opacity={0.2} transparent />
+        </mesh>
+        
         <AnatomyModel highlightedOrgans={highlightedOrgans} />
         <CameraTracker onUpdate={setCameraInfo} />
       </Canvas>
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/70 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-md transition-opacity duration-300 hover:opacity-100 opacity-80 max-w-max">
-        <span className="flex items-center gap-1">💡 Rotate: Click + Drag | Zoom: Scroll</span>
-      </div>
+
+      
+      {/* Decorative corner elements */}
+      <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#00C58E]/10 to-transparent z-0 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-[#007AFF]/10 to-transparent z-0 pointer-events-none"></div>
     </div>
   )
 }
