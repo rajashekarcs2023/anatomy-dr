@@ -1,26 +1,35 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { QrCode, RefreshCw, ArrowLeft, Shield, Settings, LogOut, Clock } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useUser } from "@auth0/nextjs-auth0";
+import {
+  ArrowLeft,
+  Clock,
+  LogOut,
+  QrCode,
+  RefreshCw,
+  Settings,
+  Shield,
+} from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function ProfileContent() {
-  const searchParams = useSearchParams()
-  const showShare = searchParams.get("share") === "true"
+  const searchParams = useSearchParams();
+  const showShare = searchParams.get("share") === "true";
 
-  const [qrGenerated, setQrGenerated] = useState(showShare)
-  const [remainingTime, setRemainingTime] = useState(60) // 60 minutes
+  const [qrGenerated, setQrGenerated] = useState(showShare);
+  const [remainingTime, setRemainingTime] = useState(60); // 60 minutes
 
   // Add a countdown effect for the QR code timer
   useEffect(() => {
     if (!qrGenerated) return;
-    
+
     const timer = setInterval(() => {
-      setRemainingTime(prev => {
+      setRemainingTime((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           return 0;
@@ -28,25 +37,31 @@ export function ProfileContent() {
         return prev - 1;
       });
     }, 60000); // Update every minute
-    
+
     return () => clearInterval(timer);
   }, [qrGenerated]);
 
-  const generateQR = () => {
-    setQrGenerated(true)
-    setRemainingTime(60)
+  const { user, isLoading } = useUser();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
+  const generateQR = () => {
+    setQrGenerated(true);
+    setRemainingTime(60);
+  };
+
   const refreshQR = () => {
-    setRemainingTime(60)
-  }
+    setRemainingTime(60);
+  };
 
   // Format remaining time as MM:SS
   const formatTime = (minutes: number) => {
     const hrs = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hrs > 0 ? `${hrs}h ` : ''}${mins}m`;
-  }
+    return `${hrs > 0 ? `${hrs}h ` : ""}${mins}m`;
+  };
 
   return (
     <div className="space-y-6 pb-20">
@@ -66,13 +81,13 @@ export function ProfileContent() {
               <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400 rounded-tr-lg"></div>
               <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400 rounded-bl-lg"></div>
               <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400 rounded-br-lg"></div>
-              
+
               {/* QR Code */}
               <div className="bg-white p-3 rounded-xl shadow-sm">
                 <QrCode size={180} className="text-blue-800" />
               </div>
             </div>
-            
+
             {/* Timer indicator */}
             <div className="flex items-center justify-center gap-2 mb-4 bg-blue-50 px-4 py-2 rounded-full text-blue-700">
               <Clock size={16} className="animate-pulse" />
@@ -80,22 +95,23 @@ export function ProfileContent() {
                 Valid for {formatTime(remainingTime)}
               </p>
             </div>
-            
+
             <p className="text-center text-sm mb-6 text-gray-600 max-w-xs">
-              This QR code provides temporary access to your health summary for healthcare providers.
+              This QR code provides temporary access to your health summary for
+              healthcare providers.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row w-full max-w-xs gap-3">
-              <Button 
-                onClick={refreshQR} 
+              <Button
+                onClick={refreshQR}
                 className="flex-1 bg-gradient-to-r from-[#007AFF] to-[#0056b3] hover:from-[#0068D6] hover:to-[#004494] text-white font-medium py-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-0 flex items-center justify-center gap-2"
               >
                 <RefreshCw size={16} className="animate-spin-slow" />
                 Refresh QR
               </Button>
-              <Button 
-                onClick={() => setQrGenerated(false)} 
-                variant="outline" 
+              <Button
+                onClick={() => setQrGenerated(false)}
+                variant="outline"
                 className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 py-5 rounded-xl flex items-center justify-center gap-2"
               >
                 <ArrowLeft size={16} />
@@ -109,15 +125,20 @@ export function ProfileContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mr-3">U</div>
+                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+                  U
+                </div>
                 <div>
-                  <h2 className="text-xl">User Name</h2>
-                  <p className="text-sm text-gray-500">user@example.com</p>
+                  <h2 className="text-xl">{user?.name}</h2>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button onClick={generateQR} className="w-full bg-teal-600 hover:bg-teal-700 mb-4">
+              <Button
+                onClick={generateQR}
+                className="w-full bg-teal-600 hover:bg-teal-700 mb-4"
+              >
                 <QrCode size={16} className="mr-2" />
                 Generate Health Snapshot QR
               </Button>
@@ -126,7 +147,9 @@ export function ProfileContent() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="notifications">Notifications</Label>
-                    <p className="text-sm text-gray-500">Receive health reminders and alerts</p>
+                    <p className="text-sm text-gray-500">
+                      Receive health reminders and alerts
+                    </p>
                   </div>
                   <Switch id="notifications" defaultChecked />
                 </div>
@@ -134,7 +157,9 @@ export function ProfileContent() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="data-sharing">Data Sharing</Label>
-                    <p className="text-sm text-gray-500">Allow anonymous data for research</p>
+                    <p className="text-sm text-gray-500">
+                      Allow anonymous data for research
+                    </p>
                   </div>
                   <Switch id="data-sharing" />
                 </div>
@@ -160,6 +185,13 @@ export function ProfileContent() {
               <Button
                 variant="outline"
                 className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => {
+                  const logoutUrl = new URL(
+                    "/auth/logout",
+                    window.location.origin
+                  );
+                  window.location.href = logoutUrl.toString();
+                }}
               >
                 <LogOut size={16} className="mr-2" />
                 Sign Out
@@ -169,5 +201,5 @@ export function ProfileContent() {
         </>
       )}
     </div>
-  )
+  );
 }
