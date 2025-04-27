@@ -186,7 +186,7 @@ export function VisualizationPanel() {
           <User size={22} className="text-gray-700" />
         </Button>
       </div>
-      <Canvas camera={{ position: [-0.00, 0.02, 0.12], fov: 75 }} className="z-10 relative">
+      <Canvas camera={{ position: [-0.00, 0.02, 0.15], fov: 75 }} className="z-10 relative">
         {/* Enhanced lighting for better model presentation */}
         <ambientLight intensity={0.7} />
         <directionalLight position={[10, 10, 5]} intensity={0.8} color="#ffffff" />
@@ -198,7 +198,7 @@ export function VisualizationPanel() {
         <OrbitControls 
           enableZoom={true} 
           enablePan={true}
-          minDistance={0.05}
+          minDistance={0.12}
           maxDistance={0.3}
           autoRotate={true} // Always auto-rotate for more life
           autoRotateSpeed={0.2} // Very slow rotation
