@@ -32,7 +32,10 @@ import { useSymptomStore } from "@/lib/symptom-store"
 // Create a new component for the custom GLTF model
 function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
   // Load the custom GLTF model
-  const { scene } = useGLTF('/models/scene.gltf')
+  const { scene: anatomyScene } = useGLTF('/models/anatomy/scene.gltf')
+  const { scene: lungsScene } = useGLTF('/models/lungs/scene.gltf')
+  const { scene: brainScene } = useGLTF('/models/brain/scene.gltf')
+  const { scene: heartScene } = useGLTF('/models/heart/scene.gltf')
   
   // Creating map based on model
   const objectNameMap: Record<string, string> = {
@@ -43,8 +46,8 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
   
   // Log the entire model structure
   useEffect(() => {
-    console.log('Model loaded:', scene);
-    scene.traverse((child) => {
+    console.log('Model loaded:', anatomyScene);
+    anatomyScene.traverse((child) => {
       console.log('Object:', {
         name: child.name,
         type: child.type,
@@ -52,7 +55,7 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
         worldPosition: child.getWorldPosition(new THREE.Vector3())
       });
     });
-  }, [scene]);
+  }, [anatomyScene]);
 
   // Live Highlighting and Pulsing (Every Frame)
   useFrame(({ clock }) => {
@@ -64,7 +67,7 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
     const elapsed = clock.getElapsedTime()
     const pulse = (Math.sin(elapsed * 4) + 1) / 2
 
-    scene.traverse((child) => {
+    anatomyScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         const organName = objectNameMap[child.name]
         const material = child.material as THREE.MeshStandardMaterial
@@ -83,12 +86,40 @@ function AnatomyModel({ highlightedOrgans }: { highlightedOrgans: string[] }) {
   })
 
   return (
-    <primitive 
-      object={scene}
-      scale={4.5} // Increased scale for better visibility
-      position={[0, 0, 0]} // Centered position
-      rotation={[0, 0, 0]} // No rotation
-    />
+    <group>
+      {/* Main body model */}
+      <primitive 
+        object={anatomyScene}
+        scale={5} // Increased scale for better visibility
+        position={[0, 0, 0]} // Centered position
+        rotation={[0, 0, 0]} // No rotation
+      />
+      {/* Extra organ models */}
+      {highlightedOrgans.includes('Lungs') && (
+        <primitive 
+          object={lungsScene}
+          position={[0.042, -0.01, 0]}
+          scale={0.13}
+        />
+      )}
+
+      {highlightedOrgans.includes('Heart') && (
+        <primitive 
+          object={heartScene}
+          position={[0.044, -0.01, 0]}
+          scale={0.02}
+        />
+      )}
+
+      {highlightedOrgans.includes('Head') && (
+        <primitive 
+          object={brainScene}
+          position={[0.035, 0.03, 0]}
+          scale={0.02}
+          rotation={[0, Math.PI / 2, 0]}
+        />
+      )}
+    </group>
   )
 }
 
@@ -150,4 +181,7 @@ export function VisualizationPanel() {
 }
 
 // Preload the model to improve performance
-useGLTF.preload('/models/scene.gltf')
+useGLTF.preload('/models/anatomy/scene.gltf')
+useGLTF.preload('/models/brain/scene.gltf')
+useGLTF.preload('/models/heart/scene.gltf')
+useGLTF.preload('/models/lungs/scene.gltf')

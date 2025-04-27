@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { Stethoscope, FileText, Calendar, Activity } from "lucide-react"
 
 // Mock timeline data
 const timelineEvents = [
@@ -61,38 +62,63 @@ export function HealthTimeline() {
     groupedEvents[monthYear].push(event)
   })
 
+  // Function to get the appropriate icon based on event type
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case "visit":
+        return <Stethoscope className="w-4 h-4 text-blue-600" />
+      case "symptom":
+        return <FileText className="w-4 h-4 text-yellow-600" />
+      default:
+        return <Activity className="w-4 h-4 text-gray-600" />
+    }
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 px-2 sm:px-4 pb-20">
       {Object.entries(groupedEvents).map(([monthYear, events]) => (
         <div key={monthYear}>
-          <h3 className="text-lg font-medium mb-3">{monthYear}</h3>
-          <div className="space-y-4">
-            {events.map((event) => (
-              <div key={event.id} className="flex">
-                <div className="mr-4 flex flex-col items-center">
-                  <div className={`w-4 h-4 rounded-full ${event.color}`}></div>
-                  <div className="w-0.5 h-full bg-gray-200 mt-1"></div>
+          <div className="flex items-center mb-4 sticky top-0 bg-white/80 backdrop-blur-sm py-2 z-10">
+            <Calendar className="w-5 h-5 mr-2 text-[#00C58E]" />
+            <h3 className="text-lg font-medium text-gray-800">{monthYear}</h3>
+          </div>
+          <div className="space-y-6 relative">
+            {/* Vertical timeline connector */}
+            <div className="absolute left-[22px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#E6F7F2] via-[#D0F0E9] to-[#E6F7F2] z-0"></div>
+            
+            {events.map((event, index) => (
+              <div key={event.id} className="flex relative z-10">
+                {/* Timeline dot with icon */}
+                <div className="mr-4 flex-shrink-0">
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md ${
+                    event.type === "visit" ? "bg-blue-50" : "bg-yellow-50"
+                  }`}>
+                    {getEventIcon(event.type)}
+                  </div>
                 </div>
-                <Card className="flex-1 mb-2">
+                
+                {/* Card */}
+                <Card className="flex-1 mb-2 overflow-hidden border-0 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 backdrop-blur-sm">
                   <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <span className="text-xs text-gray-500">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium text-gray-800">{event.title}</h4>
+                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                         {new Date(event.date).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700">{event.description}</p>
-                    <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-3">{event.description}</p>
+                    <div className="flex items-center">
                       <span
-                        className={`text-xs px-2 py-1 rounded-full ${
+                        className={`text-xs px-3 py-1 rounded-full flex items-center ${
                           event.type === "visit"
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-blue-100/70 text-blue-700"
                             : event.type === "symptom"
-                              ? "bg-yellow-100 text-yellow-700"
+                              ? "bg-yellow-100/70 text-yellow-700"
                               : "bg-gray-100 text-gray-700"
                         }`}
                       >
-                        {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                        {event.type === "visit" ? "🩺" : "📋"} 
+                        <span className="ml-1">{event.type.charAt(0).toUpperCase() + event.type.slice(1)}</span>
                       </span>
                     </div>
                   </CardContent>

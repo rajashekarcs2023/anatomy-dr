@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { QrCode, RefreshCw, Settings, Shield, LogOut } from "lucide-react"
+import { QrCode, RefreshCw, ArrowLeft, Shield, Settings, LogOut, Clock } from "lucide-react"
 
 export function ProfileContent() {
   const searchParams = useSearchParams()
@@ -14,6 +14,23 @@ export function ProfileContent() {
 
   const [qrGenerated, setQrGenerated] = useState(showShare)
   const [remainingTime, setRemainingTime] = useState(60) // 60 minutes
+
+  // Add a countdown effect for the QR code timer
+  useEffect(() => {
+    if (!qrGenerated) return;
+    
+    const timer = setInterval(() => {
+      setRemainingTime(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(timer);
+  }, [qrGenerated]);
 
   const generateQR = () => {
     setQrGenerated(true)
@@ -24,28 +41,64 @@ export function ProfileContent() {
     setRemainingTime(60)
   }
 
+  // Format remaining time as MM:SS
+  const formatTime = (minutes: number) => {
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hrs > 0 ? `${hrs}h ` : ''}${mins}m`;
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {qrGenerated ? (
-        <Card>
+        <Card className="border-0 shadow-lg overflow-hidden bg-white/90 backdrop-blur-sm rounded-2xl">
           <CardHeader>
-            <CardTitle className="text-center">Share Health Snapshot</CardTitle>
+            <CardTitle className="text-center text-blue-800 text-xl sm:text-2xl flex items-center justify-center gap-2">
+              <QrCode size={24} className="text-[#007AFF]" />
+              Share Health Snapshot
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="w-64 h-64 bg-gray-100 flex items-center justify-center mb-4">
-              {/* Placeholder for QR code */}
-              <QrCode size={120} className="text-gray-400" />
+            {/* QR Code with beautiful styling */}
+            <div className="w-64 h-64 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-md border border-blue-100 p-3 flex items-center justify-center mb-6 relative">
+              {/* Decorative corners */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400 rounded-tl-lg"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400 rounded-tr-lg"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400 rounded-bl-lg"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400 rounded-br-lg"></div>
+              
+              {/* QR Code */}
+              <div className="bg-white p-3 rounded-xl shadow-sm">
+                <QrCode size={180} className="text-blue-800" />
+              </div>
             </div>
-            <p className="text-center text-sm mb-4">
-              This QR code provides temporary access to your health summary. Valid for {remainingTime} minutes.
+            
+            {/* Timer indicator */}
+            <div className="flex items-center justify-center gap-2 mb-4 bg-blue-50 px-4 py-2 rounded-full text-blue-700">
+              <Clock size={16} className="animate-pulse" />
+              <p className="text-sm font-medium">
+                Valid for {formatTime(remainingTime)}
+              </p>
+            </div>
+            
+            <p className="text-center text-sm mb-6 text-gray-600 max-w-xs">
+              This QR code provides temporary access to your health summary for healthcare providers.
             </p>
-            <div className="flex gap-3">
-              <Button onClick={refreshQR} variant="outline" className="flex items-center">
-                <RefreshCw size={16} className="mr-2" />
+            
+            <div className="flex flex-col sm:flex-row w-full max-w-xs gap-3">
+              <Button 
+                onClick={refreshQR} 
+                className="flex-1 bg-gradient-to-r from-[#007AFF] to-[#0056b3] hover:from-[#0068D6] hover:to-[#004494] text-white font-medium py-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-0 flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={16} className="animate-spin-slow" />
                 Refresh QR
               </Button>
-              <Button onClick={() => setQrGenerated(false)} variant="outline" className="flex items-center">
-                <Settings size={16} className="mr-2" />
+              <Button 
+                onClick={() => setQrGenerated(false)} 
+                variant="outline" 
+                className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 py-5 rounded-xl flex items-center justify-center gap-2"
+              >
+                <ArrowLeft size={16} />
                 Back to Profile
               </Button>
             </div>

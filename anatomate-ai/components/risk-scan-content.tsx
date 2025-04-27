@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Loader2, AlertTriangle, CheckCircle } from "lucide-react"
+import { Loader2, AlertTriangle, CheckCircle, Heart, Activity, BarChart4 } from "lucide-react"
 
 type RiskLevel = "low" | "medium" | "high"
 
@@ -102,21 +102,38 @@ export function RiskScanContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {!scanComplete ? (
-        <Card>
+        <Card className="border-0 shadow-lg overflow-hidden bg-white/90 backdrop-blur-sm">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+            {/* Subtle background pattern - DNA helix and heartbeat */}
+            <div className="absolute top-10 left-10 text-blue-800">
+              <BarChart4 size={80} strokeWidth={1} />
+            </div>
+            <div className="absolute bottom-10 right-10 text-blue-800">
+              <Heart size={60} strokeWidth={1} />
+            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-800">
+              <Activity size={120} strokeWidth={1} />
+            </div>
+          </div>
+          
           <CardHeader>
-            <CardTitle className="text-center">Health Risk Assessment</CardTitle>
+            <CardTitle className="text-center text-blue-800 text-xl sm:text-2xl">Health Risk Assessment</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center">
-            <p className="text-center mb-6">
+          <CardContent className="flex flex-col items-center relative z-10">
+            <p className="text-center mb-8 text-gray-600 max-w-md mx-auto">
               Run a quick health risk assessment based on your health records, symptoms, and family history.
             </p>
             <div className="w-full max-w-xs">
-              <Button onClick={handleScan} disabled={scanning} className="w-full bg-teal-600 hover:bg-teal-700">
+              <Button 
+                onClick={handleScan} 
+                disabled={scanning} 
+                className="w-full bg-gradient-to-r from-[#007AFF] to-[#00C58E] hover:from-[#0068D6] hover:to-[#00A97A] text-white font-medium py-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-0"
+              >
                 {scanning ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Analyzing your health data...
                   </>
                 ) : (
@@ -125,9 +142,9 @@ export function RiskScanContent() {
               </Button>
             </div>
             {scanning && (
-              <div className="mt-6 w-full max-w-xs">
-                <Progress value={45} className="h-2 mb-2" />
-                <p className="text-xs text-center text-gray-500">
+              <div className="mt-8 w-full max-w-xs">
+                <Progress value={45} className="h-3 mb-3 rounded-full bg-gray-100" />
+                <p className="text-sm text-center text-gray-500">
                   Analyzing your health data and comparing with similar profiles...
                 </p>
               </div>
@@ -136,40 +153,54 @@ export function RiskScanContent() {
         </Card>
       ) : (
         <>
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">Your Risk Assessment</h2>
-            <Button variant="outline" size="sm" onClick={resetScan}>
+          <div className="flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-sm py-3 z-10 rounded-lg px-2">
+            <h2 className="text-xl font-bold text-blue-800">Your Risk Assessment</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetScan}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+            >
               Run New Scan
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {risks.map((risk) => (
-              <Card key={risk.id}>
-                <CardHeader className="py-3">
+              <Card key={risk.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 backdrop-blur-sm">
+                <CardHeader className="py-4 pb-3">
                   <CardTitle className="text-base flex justify-between items-center">
-                    <span>{risk.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getRiskColor(risk.level)}`}>
+                    <span className="flex items-center gap-2">
+                      {risk.level === "high" ? (
+                        <AlertTriangle size={16} className="text-red-500" />
+                      ) : risk.level === "medium" ? (
+                        <Activity size={16} className="text-yellow-500" />
+                      ) : (
+                        <Heart size={16} className="text-green-500" />
+                      )}
+                      {risk.name}
+                    </span>
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${getRiskColor(risk.level)}`}>
                       {risk.level.charAt(0).toUpperCase() + risk.level.slice(1)} Risk
                     </span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="py-2">
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span>Low</span>
-                      <span>High</span>
+                <CardContent className="py-3">
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1 px-1">
+                      <span className="text-green-600 font-medium">Low</span>
+                      <span className="text-red-600 font-medium">High</span>
                     </div>
                     <Progress
                       value={getRiskProgressValue(risk.level)}
-                      className={`h-2 ${getRiskProgressColor(risk.level)}`}
+                      className={`h-2.5 rounded-full ${getRiskProgressColor(risk.level)}`}
                     />
                   </div>
-                  <p className="text-sm mb-3">{risk.description}</p>
-                  <div className="bg-blue-50 p-3 rounded-md">
+                  <p className="text-sm mb-4 text-gray-600">{risk.description}</p>
+                  <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100">
                     <div className="flex items-start">
-                      <CheckCircle size={16} className="text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-                      <p className="text-sm text-blue-800">{risk.recommendation}</p>
+                      <CheckCircle size={18} className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                      <p className="text-sm text-blue-800 leading-relaxed">{risk.recommendation}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -177,12 +208,12 @@ export function RiskScanContent() {
             ))}
           </div>
 
-          <div className="mt-6 bg-amber-50 p-4 rounded-md">
+          <div className="mt-8 bg-amber-50/80 p-5 rounded-xl border border-amber-100 shadow-sm">
             <div className="flex items-start">
-              <AlertTriangle size={20} className="text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+              <AlertTriangle size={22} className="text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <h3 className="font-medium text-amber-800 mb-1">Important Disclaimer</h3>
-                <p className="text-sm text-amber-700">
+                <h3 className="font-medium text-amber-800 mb-2">Important Disclaimer</h3>
+                <p className="text-sm text-amber-700 leading-relaxed">
                   This risk assessment is based on the information you've provided and is not a medical diagnosis.
                   Always consult with a healthcare professional for proper evaluation and advice.
                 </p>
