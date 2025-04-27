@@ -7,7 +7,7 @@ export default function Home() {
       {/* Main Content - Centered 3D Model */}
       <div className="flex-1 flex items-center justify-center relative">
         {/* App Title - Centered elegant overlay */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-20 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extralight tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-[#34D399] via-[#60A5FA] to-[#A78BFA] drop-shadow-md animate-pulse-slow">
             AnatoMate.ai
           </h1>
