@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AppointmentsTab } from "@/components/appointments-tab";
+import { MedicalRecordsManager } from "@/components/medical-records-manager";
+import { PatientAnatomyViewer } from "@/components/patient-anatomy-viewer";
 
 interface PatientData {
   patientId: string;
@@ -53,6 +57,7 @@ export default function DoctorDashboard() {
     { id: "verify", label: "Verifying data integrity", status: "pending" },
   ]);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [activeTab, setActiveTab] = useState("patient");
 
   // Simulate the verification process
   const runVerification = async (encodedData: string) => {
@@ -238,123 +243,172 @@ export default function DoctorDashboard() {
     );
   }
 
-  if (!patientData) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Doctor Dashboard</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              Scan a patient's QR code using your device's camera to view their
-              health snapshot.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Patient Health Snapshot</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        <span className="text-[#3498DB]">PatientView</span>
+        <sup className="text-xs ml-1">™</sup>
+        <span className="text-gray-500 ml-2">by</span>
+        <span className="text-[#1ABC9C] ml-2">AnatoMate</span>
+      </h1>
 
-      <div className="grid gap-6">
-        {/* Vital Signs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Vital Signs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Blood Pressure</p>
-                <p className="text-lg font-medium">
-                  {patientData.data.vitalSigns.bloodPressure}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Heart Rate</p>
-                <p className="text-lg font-medium">
-                  {patientData.data.vitalSigns.heartRate} bpm
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Temperature</p>
-                <p className="text-lg font-medium">
-                  {patientData.data.vitalSigns.temperature}°F
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Last Checked</p>
-                <p className="text-lg font-medium">
-                  {patientData.data.vitalSigns.lastChecked}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="patient">Patient Data</TabsTrigger>
+          <TabsTrigger value="appointments">Appointments</TabsTrigger>
+          <TabsTrigger value="records">Medical Records</TabsTrigger>
+        </TabsList>
 
-        {/* Recent Symptoms */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Symptoms</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {patientData.data.recentSymptoms.map((symptom) => (
-                <div
-                  key={symptom.id}
-                  className="flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-medium">{symptom.name}</p>
-                    <p className="text-sm text-gray-500">{symptom.date}</p>
+        <TabsContent value="patient">
+          {!patientData ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Patient Data</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Scan a patient's QR code using your device's camera to view their
+                  health snapshot.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {/* 3D Anatomy Viewer */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Anatomy Visualization</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PatientAnatomyViewer symptoms={patientData.data.recentSymptoms} />
+                </CardContent>
+              </Card>
+
+              {/* Vital Signs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vital Signs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Blood Pressure</p>
+                      <p className="text-lg font-medium">
+                        {patientData.data.vitalSigns.bloodPressure}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Heart Rate</p>
+                      <p className="text-lg font-medium">
+                        {patientData.data.vitalSigns.heartRate} bpm
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Temperature</p>
+                      <p className="text-lg font-medium">
+                        {patientData.data.vitalSigns.temperature}°F
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Last Checked</p>
+                      <p className="text-lg font-medium">
+                        {patientData.data.vitalSigns.lastChecked}
+                      </p>
+                    </div>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      symptom.severity === "Mild"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : symptom.severity === "Moderate"
-                        ? "bg-orange-100 text-orange-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {symptom.severity}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
 
-        {/* Medications */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Medications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {patientData.data.medications.map((medication, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium">{medication.name}</p>
-                    <p className="text-sm text-gray-500">{medication.dosage}</p>
+              {/* Recent Symptoms */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Symptoms</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {patientData.data.recentSymptoms.map((symptom) => (
+                      <div
+                        key={symptom.id}
+                        className="flex justify-between items-center"
+                      >
+                        <div>
+                          <p className="font-medium">{symptom.name}</p>
+                          <p className="text-sm text-gray-500">{symptom.date}</p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            symptom.severity === "Mild"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : symptom.severity === "Moderate"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {symptom.severity}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  <span className="text-sm text-gray-600">
-                    {medication.frequency}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
 
-        <div className="text-center text-sm text-gray-500">
-          Data snapshot from {new Date(patientData.timestamp).toLocaleString()}
-        </div>
-      </div>
+              {/* Medications */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Medications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {patientData.data.medications.map((medication, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{medication.name}</p>
+                          <p className="text-sm text-gray-500">{medication.dosage}</p>
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {medication.frequency}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="text-center text-sm text-gray-500">
+                Data snapshot from {new Date(patientData.timestamp).toLocaleString()}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="appointments">
+          <AppointmentsTab patientData={patientData} />
+        </TabsContent>
+
+        <TabsContent value="records">
+          {!patientData ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Medical Records</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Scan a patient's QR code using your device's camera to view and edit their
+                  medical records.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <MedicalRecordsManager
+              patientData={patientData}
+              onSave={(updatedData) => {
+                // TODO: Implement saving to blockchain
+                setPatientData(updatedData)
+              }}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
